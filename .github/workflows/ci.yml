@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# Least privilege: these jobs only need to read the repository.
+permissions:
+  contents: read
+
+jobs:
+  ws-signaling:
+    name: ws-signaling (Go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/ws-signaling
+    steps:
+      - uses: actions/checkout@v4
+
+      # go-version-file keeps CI on the same Go line the Dockerfile builds with
+      # (golang:1.21-alpine), so CI tests what actually ships.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/ws-signaling/go.mod
+          cache-dependency-path: backend/ws-signaling/go.sum
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # -race because the hub and matcher are concurrent; the auth tests in
+      # internal/handlers are the suite that must stay green.
+      - name: Test (race detector)
+        run: go test -race ./...
+
+  rest-api:
+    name: rest-api (NestJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/rest-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/rest-api/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Build
+        run: npm run build
+
+      # `npm test` is deliberately NOT run yet: this package contains zero
+      # tests, so jest exits 1 with "No tests found". Add this step in the same
+      # commit that adds the first *.spec.ts file.
+      #
+      # Do NOT paper over it with --passWithNoTests: that makes an empty suite
+      # indistinguishable from a passing one.
+
+# NOT COVERED BY THIS WORKFLOW, deliberately:
+#   * app/ (Android) - needs an Android SDK; its only tests are two
+#     Android Studio template stubs plus one instrumented test that requires a
+#     device/emulator. Add a job when there are real unit tests to run.
+#   * website/ (Next.js) - no job yet; add `npm ci && npm run build` when wanted.
