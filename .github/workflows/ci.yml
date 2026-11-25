@@ -68,8 +68,69 @@ jobs:
       # Do NOT paper over it with --passWithNoTests: that makes an empty suite
       # indistinguishable from a passing one.
 
+  android:
+    name: app (Android unit tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # compileSdk is 36 (app/build.gradle.kts). Install it explicitly rather than
+      # relying on whatever the runner image happens to ship.
+      - name: Install required Android SDK packages
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      # The com.google.gms.google-services plugin is applied unconditionally
+      # (app/build.gradle.kts), and google-services.json is gitignored because it is
+      # per-project Firebase configuration. These are PLACEHOLDER values that let the app
+      # compile and its unit tests run. They are not credentials, and the unit tests make
+      # no Firebase call.
+      - name: Write a build-only placeholder google-services.json
+        run: |
+          cat > app/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "ci-build-only-not-a-real-project",
+              "storage_bucket": "ci-build-only-not-a-real-project.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": { "package_name": "com.example.backroom" }
+                },
+                "oauth_client": [],
+                "api_key": [ { "current_key": "AIzaPLACEHOLDER0NOT0A0REAL0KEY000000000" } ],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+
+      # Invoked via `sh` because gradlew is committed without its executable bit
+      # (mode 100644), so ./gradlew fails with exit 126 on Linux and macOS.
+      - name: Unit tests
+        run: sh gradlew :app:testDebugUnitTest --no-daemon
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+
 # NOT COVERED BY THIS WORKFLOW, deliberately:
-#   * app/ (Android) - needs an Android SDK; its only tests are two
-#     Android Studio template stubs plus one instrumented test that requires a
-#     device/emulator. Add a job when there are real unit tests to run.
+#   * app/ instrumented tests (app/src/androidTest) - they require a device or emulator.
+#     The voice-anonymiser tests that used to live there are now JVM unit tests and run
+#     in the `android` job above.
 #   * website/ (Next.js) - no job yet; add `npm ci && npm run build` when wanted.

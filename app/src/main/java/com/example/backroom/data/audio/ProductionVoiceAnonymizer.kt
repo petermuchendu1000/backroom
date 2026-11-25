@@ -521,14 +521,32 @@ object ProductionVoiceAnonymizer {
     /**
      * Inject subtle noise to mask voice fingerprint
      * This adds a noise floor that obscures unique voice characteristics
+     *
+     * The noise is scaled by how much signal there is to mask: a frame quieter than the
+     * noise amplitude gets proportionally less noise, and a silent frame gets none.
+     * Previously the noise was added unconditionally, so a silent input produced a
+     * constant noise floor of ~8% of full scale (RMS ~2609 of 32767 at level 100) and a
+     * caller's pauses were filled with hiss.
+     *
+     * The reference is the noise amplitude itself rather than a tuned threshold: never
+     * inject more masking noise than the signal it is meant to mask. Frames at normal
+     * speech levels sit far above the noise amplitude, so the scale saturates at 1.0 and
+     * their noise is unchanged.
      */
     private fun injectNoise(input: FloatArray): FloatArray {
-        val output = FloatArray(input.size)
         val noiseLevel = Config.NOISE_LEVEL * (anonymizationLevel.get() / 100f)
 
+        // Guard against division by zero below, which would yield NaN samples for a
+        // silent frame (0f / 0f).
+        if (noiseLevel <= 0f) return input.copyOf()
+
+        val frameRms = calculateRMSFloat(input)
+        val scaledNoiseLevel = noiseLevel * min(1f, frameRms / noiseLevel)
+
+        val output = FloatArray(input.size)
         for (i in input.indices) {
             // Generate pink-ish noise (filtered white noise)
-            val noise = (nextGaussian() * noiseLevel).toFloat()
+            val noise = (nextGaussian() * scaledNoiseLevel).toFloat()
             output[i] = input[i] + noise
         }
 

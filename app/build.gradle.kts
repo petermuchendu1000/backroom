@@ -42,6 +42,15 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        // ProductionVoiceAnonymizer is pure DSP whose only Android dependency is
+        // android.util.Log. Returning default values for the android.jar stubs lets its
+        // tests run as fast JVM unit tests instead of requiring a device/emulator.
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
+
     // Enable 16 KB page size support for Android 15+
     packaging {
         jniLibs {
