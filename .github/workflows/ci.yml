@@ -34,8 +34,28 @@ jobs:
 
       # -race because the hub and matcher are concurrent; the auth tests in
       # internal/handlers are the suite that must stay green.
+      #
+      # -count=1 disables the test result cache. Without it `go test` reports
+      # `ok ... (cached)` and exits 0 without executing anything, so a green job
+      # would not prove the suite ran on THIS commit.
+      #
+      # `go test` also exits 0 for a package with no test files, so a deleted or
+      # undiscovered suite reads as a pass. The floor is the guard: internal/handlers
+      # has 2 top-level tests and 8 subtests. Raise it in the same commit that adds
+      # tests.
+      #
+      # pipefail is required: without it `tee` returns 0 and a genuine test failure
+      # is swallowed.
       - name: Test (race detector)
-        run: go test -race ./...
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/go-test.log"
+          go test -race -count=1 -v ./... | tee "$log"
+          executed=$(awk '/--- (PASS|FAIL):/ {n++} END {print n+0}' "$log")
+          skipped=$(awk '/--- SKIP:/ {n++} END {print n+0}' "$log")
+          echo "Go: $executed test(s)/subtest(s) executed, $skipped skipped"
+          test "$executed" -ge 10
+          test "$skipped" -eq 0
 
   rest-api:
     name: rest-api (NestJS)
@@ -121,6 +141,15 @@ jobs:
       # (mode 100644), so ./gradlew fails with exit 126 on Linux and macOS.
       - name: Unit tests
         run: sh gradlew :app:testDebugUnitTest --no-daemon
+
+      # Gradle's Test task exits 0 when it discovers nothing, and prints no test
+      # count at the default log level, so "BUILD SUCCESSFUL" above does not prove
+      # the suite ran. This asserts on the JUnit report Gradle writes and surfaces
+      # the counts in the log. The floor is the current suite size: 1 in
+      # ExampleUnitTest + 10 in VoiceAnonymizationTest. Raise it in the same commit
+      # that adds tests.
+      - name: Assert the unit tests actually ran
+        run: python3 .github/scripts/assert_junit_results.py app/build/test-results/testDebugUnitTest 11
 
       - name: Upload test report on failure
         if: failure()
