@@ -1,98 +1,92 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════
-   ONGERO — Digital Sanctuary Design System
+   ONGERO — design tokens
+   ═══════════════════════════════════════════════════
+
+   These are the SAME values the Android app uses, in
+   app/src/main/java/com/ongero/app/ui/redesign/theme/Theme.kt.
+   Someone who installs the app after reading this page should
+   recognise it, so the two are kept in step deliberately.
+
+   The site previously ran a separate "digital sanctuary" palette —
+   near-black, amber and teal, with glassmorphism and glows. It was
+   a different product visually, and the app's own logo could not
+   sit on it.
    ═══════════════════════════════════════════════════ */
 
 @theme {
-  --color-obsidian: #0F0F12;
-  --color-obsidian-light: #1A1A1E;
-  --color-obsidian-card: rgba(30, 30, 35, 0.6);
-  --color-amber: #E6B86A;
-  --color-amber-dark: #C49A4E;
-  --color-teal: #4A9B9B;
-  --color-teal-dark: #3A7B7B;
-  --color-glass-border: rgba(255, 255, 255, 0.05);
-  --color-glass-border-hover: rgba(255, 255, 255, 0.12);
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Lora', ui-serif, Georgia, serif;
-  --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* Surfaces */
+  --color-paper: #f7f4f0; /* warm off-white; the app's background */
+  --color-surface: #ffffff; /* raised cards */
+
+  /* Text */
+  --color-ink: #221f2e; /* headings and body */
+  --color-muted: #6e6881; /* secondary text */
+
+  /* Lines */
+  --color-line: #e8e2db; /* hairline rules and borders */
+
+  /* Accent — the violet from the app's mark */
+  --color-violet: #5e54a4;
+  --color-violet-soft: #ebe7f8; /* tinted fills */
+  --color-violet-mid: #e5dff6;
+  --color-violet-deep: #cfc5ee; /* the mark's lighter half */
+
+  /* Semantic */
+  --color-calm: #3f9e8c; /* reassurance, "free to use" */
+  --color-danger: #c4503f; /* urgent help only */
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-lora), ui-serif, Georgia, serif;
 }
 
-/* Noise texture overlay */
-.noise-bg::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  opacity: 0.03;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
-}
-
-/* Glass morphism utility */
-.glass {
-  background: rgba(30, 30, 35, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.glass-hover:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(35, 35, 40, 0.7);
-}
-
-/* Ambient glow */
-.glow-amber {
-  box-shadow: 0 0 40px rgba(230, 184, 106, 0.15), 0 0 80px rgba(230, 184, 106, 0.05);
-}
-
-.glow-teal {
-  box-shadow: 0 0 40px rgba(74, 155, 155, 0.15), 0 0 80px rgba(74, 155, 155, 0.05);
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #0F0F12;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-/* Selection */
-::selection {
-  background: rgba(230, 184, 106, 0.3);
-  color: white;
-}
-
-/* Smooth scroll */
 html {
   scroll-behavior: smooth;
 }
 
-/* Crisis pill pulse */
-@keyframes crisis-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(230, 184, 106, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(230, 184, 106, 0); }
+/* Anchored sections should not land under the fixed header. */
+:target {
+  scroll-margin-top: 6rem;
 }
 
-.crisis-pulse {
-  animation: crisis-pulse 2s ease-in-out infinite;
+::selection {
+  background: var(--color-violet-soft);
+  color: var(--color-ink);
 }
 
-/* Waveform breathing animation */
-@keyframes breathe {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(1.3); }
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-violet-deep);
 }
 
-.wave-breathe {
-  animation: breathe 3s ease-in-out infinite;
+/* A visible focus ring, because people arrive here in distress and some of
+   them are on a keyboard or a screen reader. */
+:focus-visible {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Honour a reduced-motion preference everywhere rather than per-component. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

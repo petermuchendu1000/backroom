@@ -42,17 +42,17 @@ const resources = [
 
 export default function CrisisPage() {
   return (
-    <div className="min-h-screen bg-obsidian text-white">
+    <div className="min-h-screen bg-paper text-ink">
       <div className="max-w-3xl mx-auto px-5 md:px-8 py-20">
-        <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block">
+        <Link href="/" className="text-muted hover:text-ink text-sm mb-8 inline-block">
           ← Back to Ongero
         </Link>
 
-        <div className="glass rounded-3xl p-8 md:p-12 mb-8 border-l-4 border-amber">
+        <div className="bg-surface border border-line rounded-3xl p-8 md:p-12 mb-8 border-l-4 border-violet">
           <h1 className="text-3xl font-bold mb-4">
             If you are in immediate danger, call your local emergency number.
           </h1>
-          <p className="text-white/50 leading-relaxed">
+          <p className="text-muted leading-relaxed">
             Ongero is a peer support app — not a crisis service. If you or
             someone you know is in crisis, please contact one of these
             professional helplines immediately. They are free, confidential, and
@@ -62,7 +62,7 @@ export default function CrisisPage() {
 
         {resources.map((r) => (
           <div key={r.region} className="mb-10">
-            <h2 className="text-lg font-semibold text-white/70 mb-4">{r.region}</h2>
+            <h2 className="text-lg font-semibold text-muted mb-4">{r.region}</h2>
             <div className="space-y-3">
               {r.lines.map((line) => (
                 <a
@@ -70,13 +70,13 @@ export default function CrisisPage() {
                   href={line.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="glass glass-hover rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 block"
+                  className="bg-surface border border-line hover:border-violet transition-colors rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2"
                 >
                   <div>
                     <p className="font-medium">{line.name}</p>
-                    <p className="text-sm text-amber">{line.contact}</p>
+                    <p className="text-sm text-violet">{line.contact}</p>
                   </div>
-                  <span className="text-xs text-white/30">Visit →</span>
+                  <span className="text-xs text-muted">Visit →</span>
                 </a>
               ))}
             </div>

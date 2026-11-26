@@ -17,52 +17,19 @@ const lora = Lora({
 export const metadata: Metadata = {
   metadataBase: new URL("https://ongero.com"),
   title: {
-    default: "Ongero — Anonymous Voice Support | Talk to Someone Who Cares",
+    default: "Ongero | Someone to Talk To",
     template: "%s | Ongero",
   },
   description:
-    "Free anonymous voice support for anxiety, depression, loneliness, and life struggles. No profiles, no history — just real human connection with voice anonymization. Available 24/7.",
-  keywords: [
-    "anonymous voice support",
-    "someone to talk to",
-    "anonymous therapy alternative",
-    "free mental health support",
-    "talk to someone anonymously",
-    "vent anonymously",
-    "anonymous listening service",
-    "peer support app",
-    "loneliness help",
-    "anxiety support",
-    "depression help anonymous",
-    "mental health Kenya",
-    "crisis support",
-    "I need to talk to someone",
-    "feeling alone",
-    "anonymous counseling",
-    "voice chat anonymous",
-    "safe space to talk",
-    "emotional support",
-    "volunteer listener",
-    "free therapy chat",
-    "online crisis help",
-    "cant afford therapy",
-    "just need someone to listen",
-    "anonymous vent line",
-    "peer counseling",
-    "active listening app",
-    "talk to a stranger safely",
-    "overwhelmed need help",
-    "breakup support",
-    "grief support anonymous",
-    "burnout help",
-    "no one to talk to",
-    "midnight someone to call",
-    "voice support not text",
-  ],
+    "Talk with a volunteer listener on a short, anonymous voice call. Share what's on your mind, at your own pace. Free to use, with no account needed.",
+  // The previous list ran to 34 keywords, including "cant afford therapy" and
+  // "midnight someone to call". Search engines have ignored this tag for years, and
+  // aiming copy at those phrases shapes the page around desperation rather than around
+  // what Ongero is. The page's own words do the work now.
   openGraph: {
-    title: "Ongero — Anonymous Voice Support",
+    title: "Ongero | Someone to Talk To",
     description:
-      "Talk to someone who cares. Anonymous, consent-first voice conversations. No profiles. No history. Just a moment of connection.",
+      "Talk with a volunteer listener on a short, anonymous voice call. Share what's on your mind, at your own pace. Free to use, with no account needed.",
     type: "website",
     url: "https://ongero.com",
     siteName: "Ongero",
@@ -70,9 +37,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ongero — Anonymous Voice Support",
+    title: "Ongero | Someone to Talk To",
     description:
-      "Free anonymous voice support. Talk. Listen. Connect. Your voice is modified. Your identity is hidden.",
+      "Talk with a volunteer listener on a short, anonymous voice call. Share what's on your mind, at your own pace.",
   },
   robots: { index: true, follow: true },
   alternates: { canonical: "https://ongero.com" },
@@ -84,11 +51,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${lora.variable}`}>
       <head>
-        <meta name="theme-color" content="#0F0F12" />
+        <meta name="theme-color" content="#F7F4F0" />
       </head>
-      <body className="antialiased bg-obsidian text-white font-sans noise-bg">
-        <div className="relative z-10">{children}</div>
-      </body>
+      <body className="antialiased bg-paper text-ink font-sans">{children}</body>
     </html>
   );
 }

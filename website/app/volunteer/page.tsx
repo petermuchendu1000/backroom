@@ -9,16 +9,16 @@ export const metadata: Metadata = {
 
 export default function VolunteerPage() {
   return (
-    <div className="min-h-screen bg-obsidian text-white">
+    <div className="min-h-screen bg-paper text-ink">
       <div className="max-w-3xl mx-auto px-5 md:px-8 py-20">
-        <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block">
+        <Link href="/" className="text-muted hover:text-ink text-sm mb-8 inline-block">
           ← Back to Ongero
         </Link>
 
         <h1 className="text-4xl md:text-5xl font-bold mb-6">
           Listen. That&apos;s it.
         </h1>
-        <p className="text-lg text-white/50 leading-relaxed mb-12 max-w-xl">
+        <p className="text-lg text-muted leading-relaxed mb-12 max-w-xl">
           You don&apos;t need a degree. You don&apos;t need to fix anyone. You
           just need to be present for a few minutes. That&apos;s powerful.
         </p>
@@ -42,16 +42,16 @@ export default function VolunteerPage() {
               desc: "Your voice is anonymized too. Just be present, acknowledge, and let them know they're heard.",
             },
           ].map((step) => (
-            <div key={step.title} className="glass rounded-2xl p-6">
-              <h3 className="font-semibold text-amber mb-1">{step.title}</h3>
-              <p className="text-white/40 text-sm">{step.desc}</p>
+            <div key={step.title} className="bg-surface border border-line rounded-2xl p-6">
+              <h3 className="font-semibold text-violet mb-1">{step.title}</h3>
+              <p className="text-muted text-sm">{step.desc}</p>
             </div>
           ))}
         </div>
 
-        <div className="glass rounded-3xl p-8 border-l-4 border-teal">
-          <h2 className="text-xl font-semibold mb-3 text-teal">Guidelines</h2>
-          <ul className="space-y-2 text-sm text-white/50">
+        <div className="bg-surface border border-line rounded-3xl p-8 border-l-4 border-calm">
+          <h2 className="text-xl font-semibold mb-3 text-calm">Guidelines</h2>
+          <ul className="space-y-2 text-sm text-muted">
             <li>• <strong>Don&apos;t</strong> give advice unless asked</li>
             <li>• <strong>Don&apos;t</strong> try to diagnose or prescribe</li>
             <li>• <strong>Do</strong> validate their feelings</li>

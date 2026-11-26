@@ -8,14 +8,14 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-obsidian text-white">
+    <div className="min-h-screen bg-paper text-ink">
       <div className="max-w-3xl mx-auto px-5 md:px-8 py-20 prose prose-invert prose-sm">
-        <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block no-underline">
+        <Link href="/" className="text-muted hover:text-ink text-sm mb-8 inline-block no-underline">
           ← Back to Ongero
         </Link>
 
         <h1>Terms of Service</h1>
-        <p className="text-white/40">Last updated: April 18, 2026</p>
+        <p className="text-muted">Last updated: April 18, 2026</p>
 
         <h2>1. What Ongero Is</h2>
         <p>
@@ -62,14 +62,14 @@ export default function TermsPage() {
 
         <h2>7. Privacy</h2>
         <p>
-          See our <Link href="/privacy" className="text-amber">Privacy Policy</Link> for
+          See our <Link href="/privacy" className="text-violet">Privacy Policy</Link> for
           details on how we handle (or rather, don&apos;t handle) your data.
         </p>
 
         <h2>8. Contact</h2>
         <p>
           Questions?{" "}
-          <a href="mailto:legal@ongero.com" className="text-amber">
+          <a href="mailto:legal@ongero.com" className="text-violet">
             legal@ongero.com
           </a>
         </p>
