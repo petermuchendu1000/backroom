@@ -9,9 +9,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/backroom/ws-signaling/internal/fcm"
-	"github.com/backroom/ws-signaling/internal/models"
-	redisClient "github.com/backroom/ws-signaling/internal/redis"
+	"github.com/ongero/ws-signaling/internal/fcm"
+	"github.com/ongero/ws-signaling/internal/models"
+	redisClient "github.com/ongero/ws-signaling/internal/redis"
+	"github.com/ongero/ws-signaling/internal/turn"
 )
 
 // generateUUID generates a new UUID string
@@ -65,6 +66,7 @@ type Hub struct {
 	// TURN server configuration
 	turnURL    string
 	turnSecret string
+	turnTTL    time.Duration
 
 	// Mutex for thread-safe access
 	mu sync.RWMutex
@@ -77,7 +79,7 @@ type ClientMessage struct {
 }
 
 // NewHub creates a new Hub
-func NewHub(redis *redisClient.Client, turnURL, turnSecret string) *Hub {
+func NewHub(redis *redisClient.Client, turnURL, turnSecret string, turnTTL time.Duration) *Hub {
 	// Initialize FCM client
 	fcmClient, err := fcm.NewFCMClient()
 	if err != nil {
@@ -95,6 +97,7 @@ func NewHub(redis *redisClient.Client, turnURL, turnSecret string) *Hub {
 		fcm:        fcmClient,
 		turnURL:    turnURL,
 		turnSecret: turnSecret,
+		turnTTL:    turnTTL,
 	}
 }
 
@@ -199,6 +202,33 @@ func (h *Hub) handleMessage(msg *ClientMessage) {
 // handlePing responds to ping with pong
 func (h *Hub) handlePing(client *Client) {
 	h.sendToClient(client.userID, models.Message{Type: models.MsgTypePong})
+}
+
+// turnServersFor builds the ICE server list for one peer.
+//
+// STUN is always offered; TURN only when a shared secret is configured. With no
+// secret there is nothing honest to send: an empty secret is still a secret an
+// attacker can guess, and coturn would reject whatever we minted with it. Offering
+// STUN alone degrades to direct connections only — calls between peers behind
+// symmetric NAT will fail, which is visible and correct, rather than failing later
+// with a credential error nobody can read.
+func (h *Hub) turnServersFor(userID string) []models.TurnServer {
+	stun := models.TurnServer{URLs: []string{"stun:stun.l.google.com:19302"}}
+
+	if h.turnSecret == "" {
+		log.Printf("   ⚠️ TURN_STATIC_AUTH_SECRET is unset — offering STUN only, relayed calls will not work")
+		return []models.TurnServer{stun}
+	}
+
+	creds := turn.Mint(h.turnSecret, userID, h.turnTTL, time.Now())
+	return []models.TurnServer{
+		{
+			URLs:       []string{h.turnURL},
+			Username:   creds.Username,
+			Credential: creds.Credential,
+		},
+		stun,
+	}
 }
 
 // handleRegister handles client registration
@@ -449,18 +479,15 @@ func (h *Hub) handlePreviewAccept(client *Client, payload interface{}) {
 
 	log.Printf("   📞 Creating call between sharer %s and listener %s", share.SharerID, client.userID)
 
-	// Create TURN server credentials using configuration
+	// Short-lived TURN credentials, minted per peer.
+	//
+	// Each side gets its own: the username carries the account id, so an allocation
+	// in coturn's log can be traced back to whoever made it. They used to share one
+	// static username and password that never expired — and which coturn rejected
+	// anyway, because use-auth-secret mode ignores static user entries.
 	log.Printf("   🔧 TURN URL: %s", h.turnURL)
-	turnServers := []models.TurnServer{
-		{
-			URLs:       []string{h.turnURL},
-			Username:   "backroom",
-			Credential: h.turnSecret,
-		},
-		{
-			URLs: []string{"stun:stun.l.google.com:19302"},
-		},
-	}
+	listenerTurn := h.turnServersFor(client.userID)
+	sharerTurn := h.turnServersFor(share.SharerID)
 
 	// Send match_made to the LISTENER
 	log.Printf("   📤 Sending matchMade to LISTENER %s...", client.userID)
@@ -472,7 +499,7 @@ func (h *Hub) handlePreviewAccept(client *Client, payload interface{}) {
 		Topic:           share.Topic,
 		Intent:          share.PreviewText,
 		DurationMinutes: share.DurationMinutes,
-		TurnServers:     turnServers,
+		TurnServers:     listenerTurn,
 	}
 	h.sendToClient(client.userID, models.Message{
 		Type:    models.MsgTypeMatchMade,
@@ -490,7 +517,7 @@ func (h *Hub) handlePreviewAccept(client *Client, payload interface{}) {
 		Topic:           share.Topic,
 		Intent:          share.PreviewText,
 		DurationMinutes: share.DurationMinutes,
-		TurnServers:     turnServers,
+		TurnServers:     sharerTurn,
 	}
 	h.sendToClient(share.SharerID, models.Message{
 		Type:    models.MsgTypeMatchMade,
@@ -857,7 +884,7 @@ func (h *Hub) RegisterClient(conn *websocket.Conn, userID string) *Client {
 			Type: "connected",
 			Payload: map[string]interface{}{
 				"clientId": userID,
-				"message":  "Connected to Backroom signaling server",
+				"message":  "Connected to Ongero signaling server",
 			},
 		})
 	}()
@@ -1027,7 +1054,7 @@ func (h *Hub) handleReport(client *Client, payload interface{}) {
 		Type: models.MsgTypeReportReceived,
 		Payload: map[string]interface{}{
 			"reportId":    report.ID,
-			"message":     "Report received. Thank you for helping keep Backroom safe.",
+			"message":     "Report received. Thank you for helping keep Ongero safe.",
 			"userBlocked": blockUser,
 		},
 	})

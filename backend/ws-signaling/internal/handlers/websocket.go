@@ -5,10 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/backroom/ws-signaling/internal/auth"
-	"github.com/backroom/ws-signaling/internal/hub"
+	"github.com/ongero/ws-signaling/internal/auth"
+	"github.com/ongero/ws-signaling/internal/hub"
 )
 
 var upgrader = websocket.Upgrader{
@@ -34,7 +33,17 @@ func NewWebSocketHandler(h *hub.Hub, jwtValidator *auth.JWTValidator) *WebSocket
 	}
 }
 
-// Handle upgrades HTTP to WebSocket and registers the client
+// Handle authenticates the caller, then upgrades HTTP to WebSocket and registers
+// the client.
+//
+// Every client admitted to the hub MUST carry a cryptographically valid,
+// unexpired JWT with a non-empty subject. Authentication failures are refused
+// with 401 and are never downgraded to an anonymous identity: an anonymous
+// identity here would let an unauthenticated caller enter the matching pool and
+// be paired with a real user.
+//
+// The 401 body is deliberately generic; the specific reason is logged
+// server-side only.
 func (h *WebSocketHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	// Get token from query parameter or header
 	token := r.URL.Query().Get("token")
@@ -42,26 +51,24 @@ func (h *WebSocketHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		token = r.Header.Get("Authorization")
 	}
 
-	var userID string
-
-	// If token is provided, validate it
-	if token != "" {
-		claims, err := h.jwtValidator.ValidateToken(token)
-		if err != nil {
-			log.Printf("⚠️ Invalid token (allowing anonymous): %v", err)
-			// Generate anonymous user ID instead of rejecting
-			userID = "anon_" + uuid.New().String()
-		} else {
-			userID = claims.GetUserID()
-		}
-	} else {
-		// No token provided - generate anonymous user ID (development mode)
-		userID = "anon_" + uuid.New().String()
-		log.Printf("🔓 Anonymous connection allowed (no token), userID: %s", userID)
+	if token == "" {
+		log.Printf("🚫 WebSocket rejected: no token presented")
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
 	}
 
+	claims, err := h.jwtValidator.ValidateToken(token)
+	if err != nil {
+		log.Printf("🚫 WebSocket rejected: invalid token: %v", err)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	userID := claims.GetUserID()
 	if userID == "" {
-		userID = "anon_" + uuid.New().String()
+		log.Printf("🚫 WebSocket rejected: token carries no subject")
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
 	}
 
 	// Upgrade to WebSocket

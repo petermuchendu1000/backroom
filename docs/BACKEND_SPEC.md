@@ -1,4 +1,4 @@
-# Backroom — Backend Specification
+# Ongero — Backend Specification
 
 Table of Contents
 - Overview
@@ -24,7 +24,7 @@ Table of Contents
 
 Overview
 
-This document describes the backend architecture and implementation-ready details for Backroom (anonymous, voice-only peer-to-peer support app). It contains data models, REST and realtime contracts, security rules, operational guidance and sample SQL migrations to help engineers implement the server-side systems.
+This document describes the backend architecture and implementation-ready details for Ongero (anonymous, voice-only peer-to-peer support app). It contains data models, REST and realtime contracts, security rules, operational guidance and sample SQL migrations to help engineers implement the server-side systems.
 
 Goals & Constraints
 - Anonymous voice-first conversations between a Sharer and a Listener.
@@ -285,7 +285,7 @@ Billing
 
 WebSocket / Realtime contract
 
-Endpoint: wss://api.backroom.example/ws
+Endpoint: wss://api.ongero.example/ws
 Handshake: client connects with query ?token=<JWT>
 
 Messages are JSON and contain: { "type": "...", "payload": { ... } }

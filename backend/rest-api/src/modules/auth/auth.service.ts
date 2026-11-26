@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
 
 import { User, SubscriptionTier } from '../../database/entities/user.entity';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { AnonymousAuthDto } from './dto/auth.dto';
 
 export interface JwtPayload {
@@ -43,6 +44,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly subscriptions: SubscriptionsService,
   ) {}
 
   /**
@@ -74,11 +76,15 @@ export class AuthService {
       await this.userRepository.save(user);
     }
 
-    // Generate JWT
+    // Derived, not users.subscription_tier. The signalling service enforces call
+    // limits from this claim and cannot reach the database, so a token minted from the
+    // cached column would keep granting Plus for its whole lifetime after a lapse.
+    const tier = await this.subscriptions.currentTier(user.id);
+
     const payload: JwtPayload = {
       sub: user.id,
       anonymous: user.anonymous,
-      subscriptionTier: user.subscriptionTier,
+      subscriptionTier: tier,
     };
 
     const accessToken = this.jwtService.sign(payload);
@@ -89,7 +95,7 @@ export class AuthService {
       user: {
         id: user.id,
         anonymous: user.anonymous,
-        subscriptionTier: user.subscriptionTier,
+        subscriptionTier: tier,
         createdAt: user.createdAt,
       },
     };
@@ -142,10 +148,12 @@ export class AuthService {
       return null;
     }
 
+    // Refresh is the moment a lapse should bite: a short-lived token minted from the
+    // cached column would otherwise renew Plus indefinitely.
     const payload: JwtPayload = {
       sub: user.id,
       anonymous: user.anonymous,
-      subscriptionTier: user.subscriptionTier,
+      subscriptionTier: await this.subscriptions.currentTier(user.id),
     };
 
     return {

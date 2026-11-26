@@ -1,8 +1,8 @@
-# Backroom Documentation Index
+# Ongero Documentation Index
 
 ## Overview
 
-This folder contains comprehensive documentation for building Backroom, the anonymous voice support app.
+This folder contains comprehensive documentation for building Ongero, the anonymous voice support app.
 
 **Last Updated:** January 2026
 
@@ -30,8 +30,8 @@ This folder contains comprehensive documentation for building Backroom, the anon
 
 | Document | Description |
 |----------|-------------|
-| [BACKROOM_DEEP_ANALYSIS.md](../BACKROOM_DEEP_ANALYSIS.md) | Original deep analysis, voice anonymization, psychology |
-| [BACKROOM_PRODUCT_SPEC.md](../BACKROOM_PRODUCT_SPEC.md) | Product specification, flows, data models |
+| [ONGERO_DEEP_ANALYSIS.md](../ONGERO_DEEP_ANALYSIS.md) | Original deep analysis, voice anonymization, psychology |
+| [ONGERO_PRODUCT_SPEC.md](../ONGERO_PRODUCT_SPEC.md) | Product specification, flows, data models |
 
 ---
 
@@ -163,5 +163,5 @@ When updating documentation:
 
 ## Questions?
 
-If something is unclear or missing, add it to the documentation. These docs should be the single source of truth for building Backroom.
+If something is unclear or missing, add it to the documentation. These docs should be the single source of truth for building Ongero.
 

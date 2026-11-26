@@ -1,8 +1,8 @@
-# Backroom Crisis Resource Management
+# Ongero Crisis Resource Management
 
 ## Overview
 
-Backroom provides crisis resources to users who may need professional help. This document defines how we manage, display, and maintain these resources.
+Ongero provides crisis resources to users who may need professional help. This document defines how we manage, display, and maintain these resources.
 
 ---
 
@@ -236,7 +236,7 @@ data class CrisisAnalysis(
 │                             │
 │   ─────────────────────────│
 │                             │
-│   Backroom is not a crisis  │
+│   Ongero is not a crisis  │
 │   service. These are        │
 │   trained professionals     │
 │   who can help.             │
@@ -272,9 +272,9 @@ When crisis keywords are detected:
 │   ─────────────────────────│
 │                             │
 │   You can still talk on     │
-│   Backroom too.             │
+│   Ongero too.             │
 │                             │
-│   [ Continue to Backroom ]  │
+│   [ Continue to Ongero ]  │
 │                             │
 │   [ Maybe Later ]           │
 │                             │
@@ -437,7 +437,7 @@ object CrisisStringsSw {
 ### Disclaimers
 
 Include in app:
-- "Backroom is not a mental health service"
+- "Ongero is not a mental health service"
 - "If you are in crisis, contact professional help"
 - "We do not provide medical or mental health advice"
 
@@ -488,7 +488,7 @@ Include in app:
 │ ██░░░░░░░░░░░░░░░░░░ Suicide (9%)                       │
 │                                                          │
 │ Resource Call Rate: 12%                                  │
-│ Continue to Backroom: 88%                                │
+│ Continue to Ongero: 88%                                │
 │                                                          │
 │ Top Trigger Keywords:                                    │
 │ 1. "can't go on" - 15                                   │
@@ -543,7 +543,7 @@ Include in app:
 
 ### If You're Affected by Content
 
-Working on Backroom may expose you to difficult content. If you're affected:
+Working on Ongero may expose you to difficult content. If you're affected:
 
 1. Take a break
 2. Talk to a colleague

@@ -1,4 +1,4 @@
-# Backroom — Backend Pipeline & Runbook
+# Ongero — Backend Pipeline & Runbook
 
 Table of Contents
 - Overview
@@ -23,7 +23,7 @@ Table of Contents
 
 Overview
 
-This document lists the run-time processes and operational guidance needed to run Backroom backend components in development and production. It includes a recommended `docker-compose` developer setup, healthchecks, backups, CI/CD outline, incident runbooks and scaling guidance.
+This document lists the run-time processes and operational guidance needed to run Ongero backend components in development and production. It includes a recommended `docker-compose` developer setup, healthchecks, backups, CI/CD outline, incident runbooks and scaling guidance.
 
 Runtime components & processes
 
@@ -183,13 +183,13 @@ Postgres
 - Example backup command (pg_dump):
 
 ```bash
-PGPASSWORD=$PG_PASS pg_dump -h $PG_HOST -U $PG_USER -Fc $PG_DB -f backroom-$(date +%F).dump
+PGPASSWORD=$PG_PASS pg_dump -h $PG_HOST -U $PG_USER -Fc $PG_DB -f ongero-$(date +%F).dump
 ```
 
 Restore
 
 ```bash
-pg_restore -h $HOST -U $USER -d $DB backroom-2025-12-01.dump
+pg_restore -h $HOST -U $USER -d $DB ongero-2025-12-01.dump
 ```
 
 Redis
@@ -300,7 +300,7 @@ Healthcheck endpoints and smoke tests
 Smoke test (curl):
 
 ```bash
-curl -sS https://api.staging.backroom.example/api/v1/health | jq
+curl -sS https://api.staging.ongero.example/api/v1/health | jq
 ```
 
 ---

@@ -1,8 +1,8 @@
-# Backroom Push Notification Strategy
+# Ongero Push Notification Strategy
 
 ## Overview
 
-Push notifications are critical for Backroom because:
+Push notifications are critical for Ongero because:
 1. Listeners need to be notified of incoming previews in real-time
 2. Sharers need to know when their call connects
 3. The app may be in background when events occur
@@ -185,8 +185,8 @@ function capitalizeFirst(str) {
 ### Client-Side (Android)
 
 ```kotlin
-// BackroomFirebaseMessagingService.kt
-class BackroomFirebaseMessagingService : FirebaseMessagingService() {
+// OngeroFirebaseMessagingService.kt
+class OngeroFirebaseMessagingService : FirebaseMessagingService() {
     
     override fun onNewToken(token: String) {
         // Update token in Firestore
@@ -367,7 +367,7 @@ class PreviewActionReceiver : BroadcastReceiver() {
         
         // Dismiss notification
         val notificationManager = context.getSystemService(NotificationManager::class.java)
-        notificationManager.cancel(BackroomFirebaseMessagingService.INCOMING_PREVIEW_ID)
+        notificationManager.cancel(OngeroFirebaseMessagingService.INCOMING_PREVIEW_ID)
         
         when (intent.action) {
             "ACTION_ACCEPT" -> {
@@ -565,7 +565,7 @@ async function sendThanksNotification(userId) {
 
 ```
 ┌─────────────────────────────┐
-│ 🔔 Backroom          now    │
+│ 🔔 Ongero          now    │
 ├─────────────────────────────┤
 │                             │
 │   Someone wants to talk     │
@@ -585,7 +585,7 @@ async function sendThanksNotification(userId) {
 
 ```
 ┌─────────────────────────────────────┐
-│ 🔔 Backroom                         │
+│ 🔔 Ongero                         │
 │ Someone wants to talk               │
 │ Grief · Heavy · 10 min              │
 │                                     │
@@ -597,7 +597,7 @@ async function sendThanksNotification(userId) {
 
 ```
 ┌─────────────────────────────┐
-│ 📞 Backroom          now    │
+│ 📞 Ongero          now    │
 ├─────────────────────────────┤
 │                             │
 │   Call starting             │
@@ -746,7 +746,7 @@ class CallForegroundService : Service() {
         
         return NotificationCompat.Builder(this, "call_status")
             .setSmallIcon(R.drawable.ic_phone)
-            .setContentTitle("Backroom call in progress")
+            .setContentTitle("Ongero call in progress")
             .setContentText("$durationMin minute call")
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_CALL)

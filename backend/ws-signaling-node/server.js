@@ -1,5 +1,5 @@
 /**
- * Backroom WebSocket Signaling Server
+ * Ongero WebSocket Signaling Server
  *
  * Handles:
  * - Preview delivery to listeners
@@ -22,7 +22,7 @@ const activeCalls = new Map(); // callId -> { sharerId, listenerId }
 
 const wss = new WebSocket.Server({ host: HOST, port: PORT });
 
-console.log(`🚀 Backroom Signaling Server running on ws://${HOST}:${PORT}`);
+console.log(`🚀 Ongero Signaling Server running on ws://${HOST}:${PORT}`);
 
 wss.on('connection', (ws) => {
   const clientId = uuidv4();

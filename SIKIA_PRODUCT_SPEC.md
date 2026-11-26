@@ -1,8 +1,8 @@
-# Backroom Product Specification (MVP → V1)
+# Ongero Product Specification (MVP → V1)
 
 Purpose
-- Designer/engineer-ready breakdown of screens, flows, states, data, events, NFRs, acceptance criteria, and release plan for Backroom, an anonymous, consent-first two-way voice app with soft preview.
-- Cross-references BACKROOM_DEEP_ANALYSIS.md for voice anonymization and safety details.
+- Designer/engineer-ready breakdown of screens, flows, states, data, events, NFRs, acceptance criteria, and release plan for Ongero, an anonymous, consent-first two-way voice app with soft preview.
+- Cross-references ONGERO_DEEP_ANALYSIS.md for voice anonymization and safety details.
 - No code; platform is Android (Kotlin/Compose) for MVP.
 
 Guiding Principles
@@ -108,7 +108,7 @@ Sharer Journey States
   - Boundaries: Topics, Emotional intensity, Max duration, Languages.
   - Optional: Avoid local matches (geo-filter), Light topics only toggle.
 - Incoming Preview Screen (when Available)
-  - Shows Topic, Tone, Duration, Intent line, "Incoming on Backroom" header.
+  - Shows Topic, Tone, Duration, Intent line, "Incoming on Ongero" header.
   - Actions: Accept, Skip, Pause Availability.
   - Timer: 30s; auto-skip on timeout.
 - Acceptance Criteria:
@@ -150,13 +150,13 @@ Sharer Journey States
   - Listening Boundaries: Topics, Tone ceiling, Max duration, Languages, Light-only toggle.
   - Notifications: Incoming preview, tips, reminders.
   - Language: English/Swahili.
-  - Subscription: Backroom Plus summary and manage.
+  - Subscription: Ongero Plus summary and manage.
 - Acceptance Criteria:
   - Immediate effect for boundary changes; used by matching.
   - Export/delete process is GDPR/Kenya DPA-compliant (asynchronous if needed).
 - Edge Cases: Location permission revoked after enabling geo-filter → auto-disable with notice.
 
-2.8 Subscription Paywall (Backroom Plus)
+2.8 Subscription Paywall (Ongero Plus)
 - Benefits: Longer calls (30 min), priority matching, “experienced listener” preference, “listening only” mode.
 - Safe design: No pay-to-skip safety features.
 - Acceptance Criteria:

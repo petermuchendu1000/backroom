@@ -1,9 +1,9 @@
-# Backroom Design System
+# Ongero Design System
 
 ## Brand Identity
 
 ### App Name
-**Backroom**
+**Ongero**
 
 ### Tagline
 Primary: "Say what you can't."
@@ -23,9 +23,9 @@ Alternatives: "Be heard. Anonymously." | "Speak. Be heard."
 
 | Name | Hex | RGB | Usage |
 |------|-----|-----|-------|
-| Backroom Purple | #6B4EE6 | 107, 78, 230 | Primary actions, brand identity |
-| Backroom Purple Light | #8B7AE8 | 139, 122, 232 | Hover states, secondary elements |
-| Backroom Purple Dark | #5039B8 | 80, 57, 184 | Pressed states |
+| Ongero Purple | #6B4EE6 | 107, 78, 230 | Primary actions, brand identity |
+| Ongero Purple Light | #8B7AE8 | 139, 122, 232 | Hover states, secondary elements |
+| Ongero Purple Dark | #5039B8 | 80, 57, 184 | Pressed states |
 
 ### Semantic Colors
 
@@ -168,7 +168,7 @@ Alternatives: "Be heard. Anonymously." | "Speak. Be heard."
 ### Buttons
 
 #### Primary Button
-- Background: Backroom Purple
+- Background: Ongero Purple
 - Text: White
 - Corner radius: radius-md (8dp)
 - Padding: 16dp horizontal, 12dp vertical
@@ -177,13 +177,13 @@ Alternatives: "Be heard. Anonymously." | "Speak. Be heard."
 
 #### Secondary Button
 - Background: Transparent
-- Border: 1dp Backroom Purple
-- Text: Backroom Purple
+- Border: 1dp Ongero Purple
+- Text: Ongero Purple
 - Same dimensions as primary
 
 #### Text Button
 - Background: Transparent
-- Text: Backroom Purple
+- Text: Ongero Purple
 - Padding: 8dp
 - Used for less prominent actions
 
@@ -196,7 +196,7 @@ Alternatives: "Be heard. Anonymously." | "Speak. Be heard."
 
 #### Text Input
 - Background: Surface Variant
-- Border: 1dp Outline (focus: Backroom Purple)
+- Border: 1dp Outline (focus: Ongero Purple)
 - Corner radius: radius-md
 - Padding: 16dp
 - Min height: 56dp
@@ -228,7 +228,7 @@ Alternatives: "Be heard. Anonymously." | "Speak. Be heard."
 - Track: 52dp x 32dp
 - Thumb: 28dp circle
 - Off: Gray track, white thumb
-- On: Backroom Purple track, white thumb
+- On: Ongero Purple track, white thumb
 
 ### Chips/Pills
 
@@ -334,7 +334,7 @@ Recommend: Lucide Icons (open source, consistent)
 - Icons: Minimum 3:1
 
 ### Focus States
-- Visible focus ring: 2dp Backroom Purple
+- Visible focus ring: 2dp Ongero Purple
 - Focus order: Logical, top-to-bottom, left-to-right
 
 ### Screen Reader
@@ -404,14 +404,14 @@ ui/
 
 ```kotlin
 // Example structure - actual implementation in code phase
-object BackroomColors {
+object OngeroColors {
     val primary = Color(0xFF6B4EE6)
     val primaryLight = Color(0xFF8B7AE8)
     val primaryDark = Color(0xFF5039B8)
     // ... etc
 }
 
-object BackroomTypography {
+object OngeroTypography {
     val displayLarge = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Bold,
@@ -421,7 +421,7 @@ object BackroomTypography {
     // ... etc
 }
 
-object BackroomSpacing {
+object OngeroSpacing {
     val space1 = 4.dp
     val space2 = 8.dp
     val space4 = 16.dp

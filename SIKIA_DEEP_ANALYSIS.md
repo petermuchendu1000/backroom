@@ -1,4 +1,4 @@
-# BACKROOM: DEEP LOGICAL ANALYSIS
+# ONGERO: DEEP LOGICAL ANALYSIS
 ## Breaking Down Every Component, Edge Case, and System Interaction
 
 ---
@@ -17,7 +17,7 @@
 - Social media: Public, permanent, performative
 - Hotlines: One-way, scripted, feels clinical
 
-**Backroom's approach:**
+**Ongero's approach:**
 - Peer-to-peer (not professional)
 - Voice (intimate but not visual)
 - Ephemeral (no record, no shame)
@@ -282,8 +282,8 @@ Unlike text, voice carries:
 
 **Scenario A: Workplace Connection**
 ```
-- Sarah from Accounting uses Backroom
-- David from IT also uses Backroom
+- Sarah from Accounting uses Ongero
+- David from IT also uses Ongero
 - They randomly match
 - David recognizes Sarah's voice
 - Sarah's anonymity is broken
@@ -293,7 +293,7 @@ Unlike text, voice carries:
 **Scenario B: Small Community**
 ```
 - University with 2,000 students
-- 100 students use Backroom
+- 100 students use Ongero
 - Two friends match randomly
 - Immediately recognize each other
 - Awkwardness + broken trust
@@ -512,7 +512,7 @@ CALLER WARNING:
 IF RECOGNITION HAPPENS:
   "If you recognize someone's voice:
    - Do NOT mention it
-   - Do NOT contact them outside Backroom
+   - Do NOT contact them outside Ongero
    - Respect their privacy
    - You can end the call respectfully"
 
@@ -699,7 +699,7 @@ potentially hearing."
 ```
 Terms of Service:
 "Users accept that voice recognition may occur despite our 
-technical safeguards. Backroom is not liable for breaches of 
+technical safeguards. Ongero is not liable for breaches of 
 anonymity due to voice recognition."
 ```
 
@@ -1175,7 +1175,7 @@ SHARER SIDE:                   MATCHING ENGINE:              LISTENER SIDE:
 
 ### Proposed Model: Compassionate Freemium
 
-**FREE TIER: "Backroom Basic"**
+**FREE TIER: "Ongero Basic"**
 - 3 calls/day (sharer)
 - Unlimited listening (listener)
 - 15-minute max per call
@@ -1184,7 +1184,7 @@ SHARER SIDE:                   MATCHING ENGINE:              LISTENER SIDE:
 
 *Rationale:* 3 calls/day = enough for genuine need, prevents abuse
 
-**PAID TIER: "Backroom Plus" - $2.99/month**
+**PAID TIER: "Ongero Plus" - $2.99/month**
 - 10 calls/day (sharer)
 - 30-minute max per call
 - Priority matching (faster connections)
@@ -1359,7 +1359,7 @@ Positioned as "supporting the community" not "buying better help"
 ✗ Public posts = performative
 ✗ Toxic without moderation
 
-### Backroom's Unique Position:
+### Ongero's Unique Position:
 
 We combine:
 - Anonymity (like Omegle)
@@ -1497,7 +1497,7 @@ We combine:
 
 ## 💭 FINAL THOUGHTS: THE BIG PICTURE
 
-### Why Backroom Matters:
+### Why Ongero Matters:
 
 This isn't just an app. It's:
 
@@ -2171,7 +2171,7 @@ class PostCallFeedbackDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return AlertDialog.Builder(requireContext())
             .setTitle("How was your call?")
-            .setMessage("Your feedback helps us improve Backroom")
+            .setMessage("Your feedback helps us improve Ongero")
             .setPositiveButton("Helpful") { _, _ -> submitFeedback(Feedback.HELPFUL) }
             .setNeutralButton("Neutral") { _, _ -> submitFeedback(Feedback.NEUTRAL) }
             .setNegativeButton("Uncomfortable") { _, _ -> submitFeedback(Feedback.UNCOMFORTABLE) }
@@ -2383,7 +2383,7 @@ class CallSecurityManager {
     
     private fun showRecordingWarning() {
         // "We detected another app may be recording. 
-        //  Recording Backroom calls violates our Terms of Service 
+        //  Recording Ongero calls violates our Terms of Service 
         //  and may result in legal action."
     }
     
@@ -2402,5 +2402,5 @@ class CallSecurityManager {
 
 ---
 
-This technical appendix provides the foundation for implementing voice anonymization in Backroom. The key takeaway: **voice anonymization is complex but achievable** with the right multi-layered approach.
+This technical appendix provides the foundation for implementing voice anonymization in Ongero. The key takeaway: **voice anonymization is complex but achievable** with the right multi-layered approach.
 

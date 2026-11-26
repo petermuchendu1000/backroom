@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-	"github.com/backroom/ws-signaling/internal/models"
+	"github.com/ongero/ws-signaling/internal/models"
 )
 
 // Redis key prefixes

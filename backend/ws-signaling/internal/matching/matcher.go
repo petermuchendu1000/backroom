@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/backroom/ws-signaling/internal/fcm"
-	"github.com/backroom/ws-signaling/internal/hub"
-	"github.com/backroom/ws-signaling/internal/models"
-	redisClient "github.com/backroom/ws-signaling/internal/redis"
+	"github.com/ongero/ws-signaling/internal/fcm"
+	"github.com/ongero/ws-signaling/internal/hub"
+	"github.com/ongero/ws-signaling/internal/models"
+	redisClient "github.com/ongero/ws-signaling/internal/redis"
 )
 
 const (

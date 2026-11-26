@@ -1,4 +1,4 @@
-# Backroom — Development Docker Compose
+# Ongero — Development Docker Compose
 # Start with: docker-compose up -d
 # Requires: Docker, Docker Compose
 
@@ -9,7 +9,7 @@ services:
   # ============================================
   postgres:
     image: postgres:15-alpine
-    container_name: backroom-postgres
+    container_name: ongero-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-backroom}
@@ -19,7 +19,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/migrations/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      # Numbered so Postgres runs them in order: it executes the files in
+      # docker-entrypoint-initdb.d alphabetically, and payments references users.
+      - ./backend/migrations/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./backend/migrations/002_mpesa_payments.sql:/docker-entrypoint-initdb.d/02-mpesa-payments.sql:ro
+      - ./backend/migrations/003_payment_gateways.sql:/docker-entrypoint-initdb.d/03-payment-gateways.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-backroom} -d ${POSTGRES_DB:-backroom}"]
       interval: 10s
@@ -33,7 +37,7 @@ services:
   # ============================================
   redis:
     image: redis:7-alpine
-    container_name: backroom-redis
+    container_name: ongero-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -50,7 +54,7 @@ services:
   # ============================================
   coturn:
     image: coturn/coturn:latest
-    container_name: backroom-coturn
+    container_name: ongero-coturn
     restart: unless-stopped
     ports:
       # STUN/TURN
@@ -66,7 +70,14 @@ services:
       - "49152-49252:49152-49252/udp"
     volumes:
       - ./backend/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
-    command: ["-c", "/etc/coturn/turnserver.conf"]
+    # The secret is passed in rather than committed to turnserver.conf. ":?" makes
+    # compose refuse to start with a readable message when it is unset, instead of
+    # falling back to a default that, being in a public repository, would be an open
+    # relay for anyone who reads it.
+    command:
+      - "-c"
+      - "/etc/coturn/turnserver.conf"
+      - "--static-auth-secret=${TURN_STATIC_AUTH_SECRET:?set TURN_STATIC_AUTH_SECRET in .env — generate one with: openssl rand -hex 32}"
     environment:
       - DETECT_EXTERNAL_IP=yes
       - DETECT_RELAY_IP=yes
@@ -83,7 +94,7 @@ services:
     build:
       context: ./backend/rest-api
       dockerfile: Dockerfile
-    container_name: backroom-api
+    container_name: ongero-api
     restart: unless-stopped
     depends_on:
       postgres:
@@ -100,10 +111,10 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-backroom}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_in_production}
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_me_in_production}
       - TURN_URL=turn:coturn:3478
       - STUN_URL=stun:coturn:3478
-      - TURN_LONG_TERM_SECRET=${TURN_LONG_TERM_SECRET:-CHANGE_ME_IN_PRODUCTION_USE_STRONG_SECRET}
+      - TURN_STATIC_AUTH_SECRET=${TURN_STATIC_AUTH_SECRET:?set TURN_STATIC_AUTH_SECRET in .env}
       - MPESA_ENVIRONMENT=${MPESA_ENVIRONMENT:-sandbox}
       - MPESA_CONSUMER_KEY=${MPESA_CONSUMER_KEY:-}
       - MPESA_CONSUMER_SECRET=${MPESA_CONSUMER_SECRET:-}
@@ -125,7 +136,7 @@ services:
     build:
       context: ./backend/ws-signaling
       dockerfile: Dockerfile
-    container_name: backroom-ws-signaling
+    container_name: ongero-ws-signaling
     restart: unless-stopped
     depends_on:
       - coturn
@@ -133,10 +144,10 @@ services:
     environment:
       - WS_PORT=8443
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_backroom_2026_change_in_production}
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_me_in_production}
       # Use external IP for TURN so phones can connect (not Docker internal hostname)
       - TURN_URL=${TURN_URL:-turn:192.168.1.160:3478}
-      - TURN_SECRET=${TURN_SECRET:-backroom_turn_secret}
+      - TURN_STATIC_AUTH_SECRET=${TURN_STATIC_AUTH_SECRET:?set TURN_STATIC_AUTH_SECRET in .env}
     ports:
       - "8443:8443"
     healthcheck:
@@ -151,5 +162,5 @@ volumes:
 
 networks:
   default:
-    name: backroom-network
+    name: ongero-network
 

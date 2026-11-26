@@ -114,8 +114,8 @@ export default function TermsPage() {
             <>
               <p>
                 Questions?{" "}
-                <a href="mailto:legal@backroom.llc">
-                  legal@backroom.llc
+                <a href="mailto:legal@ongero.com">
+                  legal@ongero.com
                 </a>
               </p>
             </>

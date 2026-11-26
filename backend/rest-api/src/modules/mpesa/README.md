@@ -1,10 +1,19 @@
-# M-Pesa Integration Guide
+# M-Pesa Integration Guide (direct Safaricom Daraja)
 
-This document explains how to set up and use M-Pesa (Safaricom Daraja API) for Backroom subscriptions.
+> **This is no longer the default.** Ongero collects through PalPluss, an aggregator
+> that fronts Daraja and — unlike Daraja — signs the callbacks it sends. See
+> [`../payments/README.md`](../payments/README.md) for the gateway architecture and
+> setup. Everything below still applies when `PAYMENTS_PROVIDER=daraja`, and the
+> `/mpesa/*` routes are kept because `MPESA_CALLBACK_URL` is registered with Safaricom.
+>
+> Note that the module itself is now only the HTTP client: what a payment *means* moved
+> to `PaymentsService` in the payments module, shared by every gateway.
+
+This document explains how to set up and use M-Pesa (Safaricom Daraja API) for Ongero subscriptions.
 
 ## Overview
 
-Backroom uses **Lipa Na M-Pesa Online (STK Push)** to collect subscription payments. When a user subscribes:
+Ongero uses **Lipa Na M-Pesa Online (STK Push)** to collect subscription payments. When a user subscribes:
 
 1. User enters their Safaricom phone number
 2. App calls our API to initiate payment
@@ -76,7 +85,7 @@ MPESA_CONSUMER_KEY=your_production_key
 MPESA_CONSUMER_SECRET=your_production_secret
 MPESA_SHORTCODE=your_paybill_number
 MPESA_PASSKEY=your_production_passkey
-MPESA_CALLBACK_URL=https://api.backroom.co.ke/api/v1/mpesa/callback
+MPESA_CALLBACK_URL=https://api.ongero.com/api/v1/mpesa/callback
 ```
 
 ## API Endpoints

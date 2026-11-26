@@ -1,8 +1,8 @@
 {
-  "name": "backroom-api",
+  "name": "ongero-api",
   "version": "1.0.0",
-  "description": "Backroom REST API - Anonymous voice support platform",
-  "author": "Backroom Team",
+  "description": "Ongero REST API - Anonymous voice support platform",
+  "author": "Ongero Team",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:generate": "typeorm migration:generate -d src/database/data-source.ts",
     "migration:run": "typeorm migration:run -d src/database/data-source.ts",
-    "migration:revert": "typeorm migration:revert -d src/database/data-source.ts"
+    "migration:revert": "typeorm migration:revert -d src/database/data-source.ts",
+    "backfill:tiers": "ts-node scripts/backfill-tiers.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.0",
@@ -30,6 +31,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^4.1.2",
     "@nestjs/swagger": "^7.1.0",
     "@nestjs/typeorm": "^10.0.0",
     "axios": "^1.6.0",

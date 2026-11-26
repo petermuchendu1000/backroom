@@ -1,6 +1,6 @@
-# Backroom Backend
+# Ongero Backend
 
-Local development setup for Backroom backend services.
+Local development setup for Ongero backend services.
 
 ## Prerequisites
 
@@ -39,7 +39,7 @@ docker-compose logs -f postgres
 
 ```bash
 # Connect to Postgres
-docker exec -it backroom-postgres psql -U backroom -d backroom
+docker exec -it ongero-postgres psql -U backroom -d backroom
 
 # List tables
 \dt
@@ -91,7 +91,7 @@ The initial schema is in `backend/migrations/init.sql` and includes:
 
 ## M-Pesa Integration
 
-Backroom uses M-Pesa (Safaricom Daraja API) for subscription payments.
+Ongero uses M-Pesa (Safaricom Daraja API) for subscription payments.
 
 See: `backend/rest-api/src/modules/mpesa/README.md` for setup guide.
 
@@ -123,7 +123,7 @@ docker-compose up -d postgres
 docker-compose logs -f [service_name]
 
 # Test coturn is running
-docker exec backroom-coturn turnadmin -l
+docker exec ongero-coturn turnadmin -l
 
 # Access API docs
 open http://localhost:8080/docs

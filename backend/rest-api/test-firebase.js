@@ -37,7 +37,7 @@ try {
   const message = {
     notification: {
       title: 'Test Notification',
-      body: 'This is a test from Backroom server',
+      body: 'This is a test from Ongero server',
     },
     token: 'fake-token-for-validation', // This will fail, but validates SDK setup
   };

@@ -1,4 +1,4 @@
-# Backroom Wireframes and Screen Flows
+# Ongero Wireframes and Screen Flows
 
 ## Overview
 
@@ -18,7 +18,7 @@ Platform: Android (Compose). Design follows 01_DESIGN_SYSTEM.md.
 7. Post-Call Feedback
 8. Settings
 9. Help and Resources
-10. Subscription (Backroom Plus)
+10. Subscription (Ongero Plus)
 
 ---
 
@@ -37,7 +37,7 @@ Brand moment while app initializes.
 │                             │
 │                             │
 │                             │
-│       [Backroom Logo]       │
+│       [Ongero Logo]       │
 │                             │
 │      "Say what you can't."  │
 │                             │
@@ -49,9 +49,9 @@ Brand moment while app initializes.
 ```
 
 ### Elements
-- Backroom logo: Centered, 80dp
+- Ongero logo: Centered, 80dp
 - Tagline: Body Large, On Surface Variant
-- Loader: Small circular, Backroom Purple
+- Loader: Small circular, Ongero Purple
 
 ### Transitions
 - If first launch: Go to Onboarding
@@ -71,7 +71,7 @@ Brand moment while app initializes.
 │                             │
 ├─────────────────────────────┤
 │                             │
-│   Welcome to Backroom       │
+│   Welcome to Ongero       │
 │                             │
 │   Pour your heart out.      │
 │   Get it off your chest.    │
@@ -237,7 +237,7 @@ Brand moment while app initializes.
 
 ```
 ┌─────────────────────────────┐
-│ Backroom           [⚙️] [?] │
+│ Ongero           [⚙️] [?] │
 ├─────────────────────────────┤
 │                             │
 │   ┌─────────┬─────────┐     │
@@ -268,7 +268,7 @@ Brand moment while app initializes.
 
 ```
 ┌─────────────────────────────┐
-│ Backroom           [⚙️] [?] │
+│ Ongero           [⚙️] [?] │
 ├─────────────────────────────┤
 │                             │
 │   ┌─────────┬─────────┐     │
@@ -304,7 +304,7 @@ Brand moment while app initializes.
 
 ```
 ┌─────────────────────────────┐
-│ Backroom           [⚙️] [?] │
+│ Ongero           [⚙️] [?] │
 ├─────────────────────────────┤
 │                             │
 │   ┌─────────┬─────────┐     │
@@ -479,7 +479,7 @@ Brand moment while app initializes.
 │   │      Longer talk      │ │
 │   │                       │ │
 │   │   ○  30 minutes 🔒    │ │
-│   │      Backroom Plus    │ │
+│   │      Ongero Plus    │ │
 │   │                       │ │
 │   └───────────────────────┘ │
 │                             │
@@ -833,7 +833,7 @@ Brand moment while app initializes.
 │                             │
 │   APP                       │
 │   ┌───────────────────────┐ │
-│   │ Backroom Plus       > │ │
+│   │ Ongero Plus       > │ │
 │   └───────────────────────┘ │
 │                             │
 │   ACCOUNT                   │
@@ -901,16 +901,16 @@ Brand moment while app initializes.
 
 ---
 
-## 10. Subscription (Backroom Plus)
+## 10. Subscription (Ongero Plus)
 
 ```
 ┌─────────────────────────────┐
-│ ← Back       Backroom Plus  │
+│ ← Back       Ongero Plus  │
 ├─────────────────────────────┤
 │                             │
 │   ┌───────────────────────┐ │
 │   │                       │ │
-│   │     Backroom Plus     │ │
+│   │     Ongero Plus     │ │
 │   │                       │ │
 │   │   Support the         │ │
 │   │   community           │ │
@@ -1052,7 +1052,7 @@ Brand moment while app initializes.
 │                           │
 │   Microphone Required     │
 │                           │
-│   Backroom needs microphone │
+│   Ongero needs microphone │
 │   access to make calls.   │
 │                           │
 │   [ Open Settings ]       │

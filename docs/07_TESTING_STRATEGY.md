@@ -1,8 +1,8 @@
-# Backroom Testing Strategy
+# Ongero Testing Strategy
 
 ## Overview
 
-This document defines the testing approach for Backroom, including:
+This document defines the testing approach for Ongero, including:
 - Unit tests
 - Integration tests
 - UI tests
@@ -401,7 +401,7 @@ class HomeScreenTest {
     @Test
     fun homeScreen_showsSharerRole_byDefault() {
         composeTestRule.setContent {
-            BackroomTheme {
+            OngeroTheme {
                 HomeScreen(
                     uiState = HomeUiState(currentRole = Role.SHARER),
                     onRoleSwitch = {},
@@ -418,7 +418,7 @@ class HomeScreenTest {
     @Test
     fun homeScreen_showsListenerToggle_whenListenerRole() {
         composeTestRule.setContent {
-            BackroomTheme {
+            OngeroTheme {
                 HomeScreen(
                     uiState = HomeUiState(currentRole = Role.LISTENER),
                     onRoleSwitch = {},
@@ -435,7 +435,7 @@ class HomeScreenTest {
     @Test
     fun homeScreen_showsOfflineBanner_whenOffline() {
         composeTestRule.setContent {
-            BackroomTheme {
+            OngeroTheme {
                 HomeScreen(
                     uiState = HomeUiState(
                         currentRole = Role.SHARER,
@@ -458,7 +458,7 @@ class HomeScreenTest {
         var selectedRole = Role.SHARER
         
         composeTestRule.setContent {
-            BackroomTheme {
+            OngeroTheme {
                 HomeScreen(
                     uiState = HomeUiState(currentRole = selectedRole),
                     onRoleSwitch = { selectedRole = it },
@@ -490,7 +490,7 @@ class SharerPreviewFlowTest {
         var submitted = false
         
         composeTestRule.setContent {
-            BackroomTheme {
+            OngeroTheme {
                 SharerPreviewFlow(
                     onSubmit = { submitted = true },
                     onCancel = {}
@@ -524,7 +524,7 @@ class SharerPreviewFlowTest {
     @Test
     fun previewFlow_validatesIntentLine() {
         composeTestRule.setContent {
-            BackroomTheme {
+            OngeroTheme {
                 SharerPreviewFlow(onSubmit = {}, onCancel = {})
             }
         }
@@ -810,7 +810,7 @@ Consider hiring security firm for:
 @Test
 fun homeScreen_meetsAccessibilityGuidelines() {
     composeTestRule.setContent {
-        BackroomTheme {
+        OngeroTheme {
             HomeScreen(...)
         }
     }

@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+# Least privilege: these jobs only need to read the repository.
+permissions:
+  contents: read
+
+jobs:
+  # The REST API mints the JWT the signalling service verifies. When their default
+  # secrets differ, every token is valid and every WebSocket upgrade is still refused
+  # with 401, with nothing in either service's logs to explain it. This repository
+  # shipped three different defaults at once; a cross-language constant needs a
+  # mechanism, not a comment.
+  shared-config:
+    name: shared config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert both services default to the same JWT secret
+        run: python3 .github/scripts/assert_shared_jwt_default.py
+
+      # Same shape of bug, different secret: coturn, the REST API and the signalling
+      # service all compute one HMAC, and a mismatch means every relayed call fails
+      # with nothing in any log to say why. This also refuses a TURN secret committed
+      # to turnserver.conf, which would be an open relay.
+      - name: Assert one TURN secret, and none committed
+        run: python3 .github/scripts/assert_shared_turn_secret.py
+
+  ws-signaling:
+    name: ws-signaling (Go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/ws-signaling
+    steps:
+      - uses: actions/checkout@v4
+
+      # go-version-file keeps CI on the same Go line the Dockerfile builds with
+      # (golang:1.21-alpine), so CI tests what actually ships.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/ws-signaling/go.mod
+          cache-dependency-path: backend/ws-signaling/go.sum
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # -race because the hub and matcher are concurrent; the auth tests in
+      # internal/handlers are the suite that must stay green.
+      #
+      # -count=1 disables the test result cache. Without it `go test` reports
+      # `ok ... (cached)` and exits 0 without executing anything, so a green job
+      # would not prove the suite ran on THIS commit.
+      #
+      # `go test` also exits 0 for a package with no test files, so a deleted or
+      # undiscovered suite reads as a pass. The floor is the guard: internal/handlers
+      # has 2 top-level tests and 8 subtests. Raise it in the same commit that adds
+      # tests.
+      #
+      # pipefail is required: without it `tee` returns 0 and a genuine test failure
+      # is swallowed.
+      - name: Test (race detector)
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/go-test.log"
+          go test -race -count=1 -v ./... | tee "$log"
+          executed=$(awk '/--- (PASS|FAIL):/ {n++} END {print n+0}' "$log")
+          skipped=$(awk '/--- SKIP:/ {n++} END {print n+0}' "$log")
+          echo "Go: $executed test(s)/subtest(s) executed, $skipped skipped"
+          test "$executed" -ge 10
+          test "$skipped" -eq 0
+
+  rest-api:
+    name: rest-api (NestJS)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/rest-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: backend/rest-api/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit -p tsconfig.json
+
+      - name: Build
+        run: npm run build
+
+      # Enabled with the first *.spec.ts, as the note here said it should be.
+      # Still no --passWithNoTests: an empty suite must stay distinguishable from a
+      # passing one, so jest exiting 1 on "No tests found" is the behaviour we want.
+      - name: Test
+        run: npm test
+
+  android:
+    name: app (Android unit tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # compileSdk is 36 (app/build.gradle.kts). Install it explicitly rather than
+      # relying on whatever the runner image happens to ship.
+      - name: Install required Android SDK packages
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
+
+      # The com.google.gms.google-services plugin is applied unconditionally
+      # (app/build.gradle.kts), and google-services.json is gitignored because it is
+      # per-project Firebase configuration. These are PLACEHOLDER values that let the app
+      # compile and its unit tests run. They are not credentials, and the unit tests make
+      # no Firebase call.
+      - name: Write a build-only placeholder google-services.json
+        run: |
+          cat > app/google-services.json <<'JSON'
+          {
+            "project_info": {
+              "project_number": "000000000000",
+              "project_id": "ci-build-only-not-a-real-project",
+              "storage_bucket": "ci-build-only-not-a-real-project.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+                  "android_client_info": { "package_name": "com.ongero.app" }
+                },
+                "oauth_client": [],
+                "api_key": [ { "current_key": "AIzaPLACEHOLDER0NOT0A0REAL0KEY000000000" } ],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          JSON
+
+      # Invoked via `sh` because gradlew is committed without its executable bit
+      # (mode 100644), so ./gradlew fails with exit 126 on Linux and macOS.
+      - name: Unit tests
+        run: sh gradlew :app:testDebugUnitTest --no-daemon
+
+      # Gradle's Test task exits 0 when it discovers nothing, and prints no test
+      # count at the default log level, so "BUILD SUCCESSFUL" above does not prove
+      # the suite ran. This asserts on the JUnit report Gradle writes and surfaces
+      # the counts in the log. The floor is the current suite size: 1 in
+      # ExampleUnitTest + 10 in VoiceAnonymizationTest + 3 in RedesignWireMappingTest.
+      # Raise it in the same commit that adds tests.
+      - name: Assert the unit tests actually ran
+        run: python3 .github/scripts/assert_junit_results.py app/build/test-results/testDebugUnitTest 52
+
+      - name: Upload test report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-report
+          path: app/build/reports/tests/testDebugUnitTest/
+
+# NOT COVERED BY THIS WORKFLOW, deliberately:
+#   * app/ instrumented tests (app/src/androidTest) - they require a device or emulator.
+#     The voice-anonymiser tests that used to live there are now JVM unit tests and run
+#     in the `android` job above.
+#   * website/ (Next.js) - no job yet; add `npm ci && npm run build` when wanted.

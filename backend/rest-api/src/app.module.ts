@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // Config
 import configuration from './config/configuration';
@@ -14,7 +15,7 @@ import { CallsModule } from './modules/calls/calls.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
-import { MpesaModule } from './modules/mpesa/mpesa.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { HealthModule } from './modules/health/health.module';
 
@@ -25,6 +26,9 @@ import { HealthModule } from './modules/health/health.module';
       isGlobal: true,
       load: [configuration],
     }),
+
+    // Timers (the subscription lapse sweep)
+    ScheduleModule.forRoot(),
 
     // Database
     TypeOrmModule.forRootAsync({
@@ -41,7 +45,7 @@ import { HealthModule } from './modules/health/health.module';
     FeedbackModule,
     ReportsModule,
     SubscriptionsModule,
-    MpesaModule,
+    PaymentsModule,
     NotificationsModule,
     HealthModule,
   ],

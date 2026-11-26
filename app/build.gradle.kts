@@ -6,19 +6,28 @@ plugins {
 }
 
 android {
-    namespace = "com.example.backroom"
+    namespace = "com.ongero.app"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.backroom"
+        applicationId = "com.ongero.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Redesigned UI, off by default. The nav graph keeps the same routes either way,
+        // so only the composable behind a route changes. Build the new flow with:
+        //     ./gradlew installDebug -PredesignUi=true
+        buildConfigField(
+            "boolean",
+            "REDESIGN_UI",
+            (project.findProperty("redesignUi")?.toString()?.toBoolean() ?: false).toString(),
+        )
     }
 
     buildTypes {
@@ -42,6 +51,17 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        // ProductionVoiceAnonymizer is pure DSP whose only Android dependency is
+        // android.util.Log. Returning default values for the android.jar stubs lets its
+        // tests run as fast JVM unit tests instead of requiring a device/emulator.
+        unitTests {
+            isReturnDefaultValues = true
+            // Robolectric renders the redesign screens off-device; it needs real resources.
+            isIncludeAndroidResources = true
+        }
+    }
+
     // Enable 16 KB page size support for Android 15+
     packaging {
         jniLibs {
@@ -55,6 +75,23 @@ android {
             // Keep native libs uncompressed for better 16KB compatibility
             useLegacyPackaging = false
         }
+    }
+}
+
+// The screenshot tests render every redesigned screen to a PNG. They are an authoring
+// tool, not a regression gate: they are slow and Robolectric fetches an android-all jar
+// on first run. The normal `testDebugUnitTest` therefore skips the package entirely —
+// filtered out, not @Ignore'd, so they are never reported as skipped tests.
+// Run them with:  ./gradlew :app:testDebugUnitTest -Pscreenshots
+tasks.withType<Test>().configureEach {
+    if (!project.hasProperty("screenshots")) {
+        exclude("**/screenshot/**")
+    } else {
+        systemProperty("roborazzi.test.record", "true")
+    }
+    // Lets a caller point Robolectric at a Maven mirror when the default is rate-limited.
+    System.getProperty("robolectric.dependency.repo.url")?.let {
+        systemProperty("robolectric.dependency.repo.url", it)
     }
 }
 
@@ -91,6 +128,26 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx")
 
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    // A real HTTP server in-process, so the API client is tested against sockets and
+    // bytes rather than against a mock of OkHttp. Version pinned to the okhttp already
+    // in the build: mockwebserver ships from the same release train and mixing them
+    // pulls a second copy of okhttp onto the test classpath.
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+
+    // Off-device rendering of the redesign screens. These tests live in
+    // com.ongero.app.screenshot and are EXCLUDED from the normal test run
+    // (see the Test task config below) because they are slow and only produce images.
+    // Pinned to the last Roborazzi line built against Kotlin 1.9.x: newer releases ship
+    // Kotlin 2.3 metadata, which this project's Kotlin 2.0.21 compiler refuses to read.
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.40.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.40.1")
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

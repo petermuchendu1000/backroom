@@ -126,8 +126,8 @@ export default function PrivacyPage() {
             <>
               <p>
                 Questions about privacy? Email{" "}
-                <a href="mailto:privacy@backroom.llc">
-                  privacy@backroom.llc
+                <a href="mailto:privacy@ongero.com">
+                  privacy@ongero.com
                 </a>
               </p>
             </>

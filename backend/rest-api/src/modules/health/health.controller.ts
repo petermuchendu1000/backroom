@@ -11,7 +11,7 @@ export class HealthController {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),
-      service: 'backroom-api',
+      service: 'ongero-api',
       version: '1.0.0',
     };
   }
