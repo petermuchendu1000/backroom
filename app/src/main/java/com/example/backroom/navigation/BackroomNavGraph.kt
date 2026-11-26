@@ -96,7 +96,6 @@ fun BackroomNavGraph(
                 RedesignTheme {
                     RedesignHome(
                         onStartCall = { navController.navigate(Screen.SharerTopic.route) },
-                        onListen = { navController.navigate(Screen.Boundaries.route) },
                         onSettings = { navController.navigate(Screen.Settings.route) },
                         onHelp = { navController.navigate(Screen.Help.route) },
                         onCallStarted = { callId ->

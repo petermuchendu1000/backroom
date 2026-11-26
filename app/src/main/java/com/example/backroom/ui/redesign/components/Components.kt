@@ -1,5 +1,10 @@
 package com.example.backroom.ui.redesign.components
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,9 +23,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -104,12 +111,27 @@ fun Rings(
     sizes: List<Dp>,
     colors: List<Color>,
     modifier: Modifier = Modifier,
+    pulse: Boolean = false,
 ) {
+    val breath = rememberInfiniteTransition(label = "rings")
     Box(modifier = modifier.size(sizes.first()), contentAlignment = Alignment.Center) {
         sizes.forEachIndexed { i, s ->
+            // Only the outer rings breathe, and slowly: the core stays still so the
+            // shape reads as alive rather than as a progress indicator.
+            val spec = infiniteRepeatable<Float>(
+                animation = tween(durationMillis = 7000, delayMillis = i * 900),
+                repeatMode = RepeatMode.Reverse,
+            )
+            val scale by breath.animateFloat(
+                initialValue = if (pulse && i < sizes.lastIndex) 0.88f else 1f,
+                targetValue = 1f,
+                animationSpec = spec,
+                label = "ringScale$i",
+            )
             Box(
                 Modifier
                     .size(s)
+                    .scale(scale)
                     .clip(CircleShape)
                     .background(colors[i]),
             )

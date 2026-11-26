@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.example.backroom.ui.redesign.screens.AfterCallScreen
 import com.example.backroom.ui.redesign.screens.AskScreen
+import com.example.backroom.ui.redesign.screens.HomeMode
 import com.example.backroom.ui.redesign.screens.HomeScreen
 import com.example.backroom.ui.redesign.screens.InCallScreen
 import com.example.backroom.ui.redesign.screens.LeavingCallScreen
@@ -51,7 +52,31 @@ class RedesignScreenshotTest {
 
     @Test
     fun home() = shot("03-home") {
-        HomeScreen(connected = true, onStart = {}, onListen = {}, onSettings = {}, onHelp = {})
+        HomeScreen(connected = true, onStart = {}, onSettings = {}, onHelp = {})
+    }
+
+    @Test
+    fun homeListenOff() = shot("03b-home-listen-off") {
+        HomeScreen(
+            connected = true,
+            onStart = {},
+            onSettings = {},
+            onHelp = {},
+            mode = HomeMode.LISTEN,
+            available = false,
+        )
+    }
+
+    @Test
+    fun homeListenOn() = shot("03c-home-listening") {
+        HomeScreen(
+            connected = true,
+            onStart = {},
+            onSettings = {},
+            onHelp = {},
+            mode = HomeMode.LISTEN,
+            available = true,
+        )
     }
 
     @Test
