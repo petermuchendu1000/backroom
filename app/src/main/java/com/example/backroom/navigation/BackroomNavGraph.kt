@@ -13,6 +13,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.backroom.data.PreferencesManager
 import com.example.backroom.data.network.CallManager
+import com.example.backroom.BuildConfig
+import com.example.backroom.ui.redesign.flow.RedesignHome
+import com.example.backroom.ui.redesign.flow.RedesignInCall
+import com.example.backroom.ui.redesign.flow.RedesignOnboarding
+import com.example.backroom.ui.redesign.flow.RedesignSharerFlow
+import com.example.backroom.ui.redesign.screens.AfterCallScreen
+import com.example.backroom.ui.redesign.screens.CallFeeling
+import com.example.backroom.ui.redesign.theme.RedesignTheme
 import com.example.backroom.ui.screens.call.CallInfo
 import com.example.backroom.ui.screens.call.InCallScreen
 import com.example.backroom.ui.screens.feedback.PostCallFeedbackScreen
@@ -66,14 +74,17 @@ fun BackroomNavGraph(
         }
 
         composable(Screen.Onboarding.route) {
-            OnboardingScreen(
-                onOnboardingComplete = {
-                    preferencesManager.isOnboardingCompleted = true
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Onboarding.route) { inclusive = true }
-                    }
+            val complete: () -> Unit = {
+                preferencesManager.isOnboardingCompleted = true
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Onboarding.route) { inclusive = true }
                 }
-            )
+            }
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme { RedesignOnboarding(onComplete = complete) }
+            } else {
+                OnboardingScreen(onOnboardingComplete = complete)
+            }
         }
 
         // ============================================
@@ -81,6 +92,22 @@ fun BackroomNavGraph(
         // ============================================
 
         composable(Screen.Home.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignHome(
+                        onStartCall = { navController.navigate(Screen.SharerTopic.route) },
+                        onListen = { navController.navigate(Screen.Boundaries.route) },
+                        onSettings = { navController.navigate(Screen.Settings.route) },
+                        onHelp = { navController.navigate(Screen.Help.route) },
+                        onCallStarted = { callId ->
+                            navController.navigate(Screen.InCall.createRoute(callId)) {
+                                popUpTo(Screen.Home.route)
+                            }
+                        },
+                    )
+                }
+                return@composable
+            }
             HomeScreen(
                 onStartCall = {
                     navController.navigate(Screen.SharerTopic.route)
@@ -120,6 +147,19 @@ fun BackroomNavGraph(
         // ============================================
 
         composable(Screen.SharerTopic.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignSharerFlow(
+                        onBack = { navController.popBackStack() },
+                        onCallStarted = { callId ->
+                            navController.navigate(Screen.InCall.createRoute(callId)) {
+                                popUpTo(Screen.Home.route)
+                            }
+                        },
+                    )
+                }
+                return@composable
+            }
             SharerFlowScreen(
                 onBack = { navController.popBackStack() },
                 onCallStarted = { callId ->
@@ -159,6 +199,24 @@ fun BackroomNavGraph(
         ) { backStackEntry ->
             val callId = backStackEntry.arguments?.getString("callId") ?: ""
             Log.d(TAG, "📞 InCallScreen composable entered with callId=$callId")
+
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme(night = true) {
+                    RedesignInCall(
+                        onEndCall = { elapsedSeconds ->
+                            navController.navigate(
+                                Screen.PostCallFeedback.createRoute(callId, elapsedSeconds)
+                            ) { popUpTo(Screen.Home.route) }
+                        },
+                        onEmergencyExit = {
+                            navController.navigate(Screen.ReportProblem.createRoute(callId)) {
+                                popUpTo(Screen.Home.route)
+                            }
+                        },
+                    )
+                }
+                return@composable
+            }
 
             // Get call info from CallManager
             val currentRole by CallManager.currentRole.collectAsState()
@@ -213,6 +271,27 @@ fun BackroomNavGraph(
         ) { backStackEntry ->
             val callId = backStackEntry.arguments?.getString("callId") ?: ""
             val durationSeconds = backStackEntry.arguments?.getInt("durationSeconds") ?: 0
+
+            if (BuildConfig.REDESIGN_UI) {
+                val home: () -> Unit = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+                RedesignTheme {
+                    AfterCallScreen(
+                        onAnswer = { feeling ->
+                            if (feeling == CallFeeling.WRONG) {
+                                navController.navigate(Screen.ReportProblem.createRoute(callId))
+                            } else {
+                                home()
+                            }
+                        },
+                        onSkip = home,
+                    )
+                }
+                return@composable
+            }
 
             PostCallFeedbackScreen(
                 callDurationSeconds = durationSeconds,

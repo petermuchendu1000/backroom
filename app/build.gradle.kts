@@ -19,6 +19,15 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Redesigned UI, off by default. The nav graph keeps the same routes either way,
+        // so only the composable behind a route changes. Build the new flow with:
+        //     ./gradlew installDebug -PredesignUi=true
+        buildConfigField(
+            "boolean",
+            "REDESIGN_UI",
+            (project.findProperty("redesignUi")?.toString()?.toBoolean() ?: false).toString(),
+        )
     }
 
     buildTypes {

@@ -39,15 +39,27 @@ import com.example.backroom.ui.redesign.components.PrimaryButton
 import com.example.backroom.ui.redesign.theme.RedesignTheme
 import com.example.backroom.ui.redesign.theme.backroomColors
 
-enum class Weight(val label: String) { LIGHT("Light"), HEAVY("Heavy"), A_LOT("A lot") }
+/**
+ * `label` is what the person reads; `wire` is what the server is already sent.
+ *
+ * They are deliberately separate. The redesign softens the wording ("A lot" rather
+ * than "Very Heavy"), but listener boundaries and matching are keyed on the existing
+ * strings, so changing the copy must not change the protocol. RedesignWireMappingTest
+ * asserts every `wire` value still exists in the original enums.
+ */
+enum class Weight(val label: String, val wire: String) {
+    LIGHT("Light", "Light"),
+    HEAVY("Heavy", "Heavy"),
+    A_LOT("A lot", "Very Heavy"),
+}
 
-enum class Topic(val label: String) {
-    CONFESSION("Confession"),
-    LETTING_OUT("Letting out"),
-    ADVICE("Advice"),
-    GRIEF("Grief"),
-    JUST_TALKING("Just talking"),
-    HARD_TO_SAY("Hard to say"),
+enum class Topic(val label: String, val wire: String) {
+    CONFESSION("Confession", "Confession"),
+    LETTING_OUT("Letting out", "Letting Out"),
+    ADVICE("Advice", "Advice"),
+    GRIEF("Grief", "Grief"),
+    JUST_TALKING("Just talking", "Just Talking"),
+    HARD_TO_SAY("Hard to say", "Something Hard"),
 }
 
 /** What the sharer flow submits. */
