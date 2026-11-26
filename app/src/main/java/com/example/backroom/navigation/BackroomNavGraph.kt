@@ -17,11 +17,17 @@ import com.example.backroom.BuildConfig
 import com.example.backroom.ui.redesign.flow.RedesignHome
 import com.example.backroom.ui.redesign.flow.RedesignInCall
 import com.example.backroom.ui.redesign.flow.RedesignOnboarding
+import com.example.backroom.ui.redesign.flow.RedesignBlockedPeople
+import com.example.backroom.ui.redesign.flow.RedesignBoundaries
 import com.example.backroom.ui.redesign.flow.RedesignHelp
+import com.example.backroom.ui.redesign.flow.RedesignPlus
 import com.example.backroom.ui.redesign.flow.RedesignSettings
 import com.example.backroom.ui.redesign.flow.RedesignSharerFlow
 import com.example.backroom.ui.redesign.screens.AfterCallScreen
 import com.example.backroom.ui.redesign.screens.CallFeeling
+import com.example.backroom.ui.redesign.screens.RecognitionCheckScreen as RedesignRecognitionCheckScreen
+import com.example.backroom.ui.redesign.screens.ReportScreen
+import com.example.backroom.ui.redesign.screens.SplashScreen as RedesignSplashScreen
 import com.example.backroom.ui.redesign.theme.RedesignTheme
 import com.example.backroom.ui.screens.call.CallInfo
 import com.example.backroom.ui.screens.call.InCallScreen
@@ -61,6 +67,24 @@ fun BackroomNavGraph(
         // ============================================
 
         composable(Screen.Splash.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                val go: () -> Unit = {
+                    val destination = if (preferencesManager.isOnboardingCompleted) {
+                        Screen.Home.route
+                    } else {
+                        Screen.Onboarding.route
+                    }
+                    navController.navigate(destination) {
+                        popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(2000)
+                    go()
+                }
+                RedesignTheme { RedesignSplashScreen() }
+                return@composable
+            }
             SplashScreen(
                 onSplashComplete = {
                     val destination = if (preferencesManager.isOnboardingCompleted) {
@@ -177,6 +201,16 @@ fun BackroomNavGraph(
         // ============================================
 
         composable(Screen.ListenerBoundaries.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignBoundaries(
+                        preferencesManager = preferencesManager,
+                        onBack = { navController.popBackStack() },
+                        onSaved = { navController.popBackStack() },
+                    )
+                }
+                return@composable
+            }
             SetBoundariesScreen(
                 onBackClick = { navController.popBackStack() },
                 onSave = { navController.popBackStack() }
@@ -184,6 +218,16 @@ fun BackroomNavGraph(
         }
 
         composable(Screen.Boundaries.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignBoundaries(
+                        preferencesManager = preferencesManager,
+                        onBack = { navController.popBackStack() },
+                        onSaved = { navController.popBackStack() },
+                    )
+                }
+                return@composable
+            }
             SetBoundariesScreen(
                 onBackClick = { navController.popBackStack() },
                 onSave = { navController.popBackStack() }
@@ -312,6 +356,18 @@ fun BackroomNavGraph(
         }
 
         composable(Screen.RecognitionCheck.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignRecognitionCheckScreen(
+                        onAnswer = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Home.route) { inclusive = true }
+                            }
+                        },
+                    )
+                }
+                return@composable
+            }
             RecognitionCheckScreen(
                 onResponse = { response ->
                     // Log response for analytics
@@ -327,6 +383,29 @@ fun BackroomNavGraph(
             arguments = listOf(navArgument("callId") { type = NavType.StringType })
         ) { backStackEntry ->
             val callId = backStackEntry.arguments?.getString("callId") ?: ""
+
+            if (BuildConfig.REDESIGN_UI) {
+                val home: () -> Unit = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
+                RedesignTheme {
+                    ReportScreen(
+                        onBack = home,
+                        onSubmit = { reportData ->
+                            CallManager.submitReport(
+                                callId = callId,
+                                reason = reportData.reason.name,
+                                details = reportData.details,
+                                blockUser = reportData.blockUser,
+                            )
+                            home()
+                        },
+                    )
+                }
+                return@composable
+            }
 
             ReportProblemScreen(
                 onBack = {
@@ -384,6 +463,15 @@ fun BackroomNavGraph(
         }
 
         composable(Screen.BlockedUsers.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignBlockedPeople(
+                        preferencesManager = preferencesManager,
+                        onBack = { navController.popBackStack() },
+                    )
+                }
+                return@composable
+            }
             BlockedUsersScreen(
                 preferencesManager = preferencesManager,
                 onBack = { navController.popBackStack() }
@@ -391,6 +479,16 @@ fun BackroomNavGraph(
         }
 
         composable(Screen.Subscription.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignPlus(
+                        preferencesManager = preferencesManager,
+                        onBack = { navController.popBackStack() },
+                        onSubscribe = { /* Initiate M-Pesa payment */ },
+                    )
+                }
+                return@composable
+            }
             SubscriptionScreen(
                 preferencesManager = preferencesManager,
                 onBack = { navController.popBackStack() },

@@ -5,7 +5,14 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.example.backroom.ui.redesign.screens.AfterCallScreen
 import com.example.backroom.ui.redesign.screens.AskScreen
+import com.example.backroom.ui.redesign.screens.BlockedPeopleScreen
+import com.example.backroom.ui.redesign.screens.BoundariesScreen
 import com.example.backroom.ui.redesign.screens.HelpScreen
+import com.example.backroom.ui.redesign.screens.IncomingPreviewSheet
+import com.example.backroom.ui.redesign.screens.PlusScreen
+import com.example.backroom.ui.redesign.screens.RecognitionCheckScreen as RedesignRecognitionCheckScreen
+import com.example.backroom.ui.redesign.screens.ReportScreen
+import com.example.backroom.ui.redesign.screens.SplashScreen as RedesignSplashScreen
 import com.example.backroom.ui.redesign.screens.HomeMode
 import com.example.backroom.ui.redesign.screens.HomeScreen
 import com.example.backroom.ui.redesign.screens.InCallScreen
@@ -15,6 +22,8 @@ import com.example.backroom.ui.redesign.screens.WaitingScreen
 import com.example.backroom.ui.redesign.screens.SettingsScreen
 import com.example.backroom.ui.redesign.screens.WelcomeScreen
 import com.example.backroom.ui.screens.help.BackroomFaq
+import com.example.backroom.ui.screens.listener.MaxIntensity
+import com.example.backroom.ui.screens.sharer.Topic
 import com.example.backroom.ui.screens.help.KenyaCrisisResources
 import com.example.backroom.ui.redesign.theme.RedesignTheme
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -131,6 +140,52 @@ class RedesignScreenshotTest {
             onDeleteAccount = {},
         )
     }
+
+    @Test
+    fun splash() = shot("11-splash") { RedesignSplashScreen() }
+
+    @Test
+    fun incomingPreview() = shot("12-incoming") {
+        IncomingPreviewSheet(
+            theirWords = "Lost someone close, need to talk through the pain",
+            topic = "Grief",
+            tone = "Heavy",
+            minutes = 15,
+            secondsLeft = 21,
+            totalSeconds = 30,
+            onAccept = {},
+            onSkip = {},
+        )
+    }
+
+    @Test
+    fun report() = shot("13-report") { ReportScreen(onBack = {}, onSubmit = {}) }
+
+    @Test
+    fun boundaries() = shot("14-boundaries") {
+        BoundariesScreen(
+            initialTopics = Topic.entries.toSet() - Topic.SOMETHING_HARD,
+            initialIntensity = MaxIntensity.UP_TO_HEAVY,
+            initialMaxMinutes = 15,
+            onBack = {},
+            onSave = { _, _, _ -> },
+        )
+    }
+
+    @Test
+    fun blockedPeople() = shot("15-blocked") {
+        BlockedPeopleScreen(
+            blocked = listOf("anon_8f2c41", "anon_1d9b07"),
+            onBack = {},
+            onUnblock = {},
+        )
+    }
+
+    @Test
+    fun plus() = shot("16-plus") { PlusScreen(activeTier = null, onBack = {}, onSubscribe = {}) }
+
+    @Test
+    fun recognitionCheck() = shot("17-recognition") { RedesignRecognitionCheckScreen(onAnswer = {}) }
 
     // Rendered with the real verified resource list, not a fixture: this screen is the
     // one whose content being right matters most.

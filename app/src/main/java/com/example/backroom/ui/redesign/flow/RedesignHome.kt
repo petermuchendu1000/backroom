@@ -11,15 +11,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.example.backroom.data.network.CallManager
 import com.example.backroom.data.network.ConnectionState
+import kotlinx.coroutines.delay
 import com.example.backroom.service.ListenerService
 import com.example.backroom.ui.redesign.screens.HomeMode
+import com.example.backroom.ui.redesign.screens.IncomingPreviewSheet
 import com.example.backroom.ui.redesign.screens.HomeScreen
-import com.example.backroom.ui.screens.home.IncomingPreviewDialog
 
 /**
  * Home, bound to [CallManager].
@@ -84,12 +86,29 @@ fun RedesignHome(
         }
     }
 
+    // An incoming preview takes the whole screen rather than sitting in a dialog: it is
+    // the listener's real decision, and their words deserve the room.
     incomingPreview?.let { preview ->
-        IncomingPreviewDialog(
-            preview = preview,
+        var secondsLeft by remember(preview.shareId) {
+            mutableIntStateOf(preview.countdownSeconds)
+        }
+        LaunchedEffect(preview.shareId) {
+            while (secondsLeft > 0) {
+                delay(1000)
+                secondsLeft -= 1
+            }
+        }
+        IncomingPreviewSheet(
+            theirWords = preview.previewText,
+            topic = preview.topic,
+            tone = preview.tone,
+            minutes = preview.durationMinutes,
+            secondsLeft = secondsLeft,
+            totalSeconds = preview.countdownSeconds,
             onAccept = { CallManager.acceptPreview() },
-            onDecline = { CallManager.declinePreview() },
+            onSkip = { CallManager.declinePreview() },
         )
+        return
     }
 
     HomeScreen(
