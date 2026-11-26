@@ -1,4 +1,4 @@
-# Backroom — Tools, Libraries and Infrastructure Choices
+# Ongero — Tools, Libraries and Infrastructure Choices
 
 Table of contents
 - Purpose
@@ -27,7 +27,7 @@ Table of contents
 
 Purpose
 
-This document lists and explains the tools and libraries we should configure for the Backroom backend. For each tool or category I explain: why we need it, recommended options, free/open-source alternatives, pros and cons, and minimal configuration guidance for our architecture (anonymous, voice-first, WebRTC-based mobile app).
+This document lists and explains the tools and libraries we should configure for the Ongero backend. For each tool or category I explain: why we need it, recommended options, free/open-source alternatives, pros and cons, and minimal configuration guidance for our architecture (anonymous, voice-first, WebRTC-based mobile app).
 
 Recommended MVP stack (short)
 - Language/runtime: Go for signaling & matching; Node.js / NestJS for REST & admin

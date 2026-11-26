@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Become a Volunteer Listener",
   description:
-    "Help others by listening anonymously. No training required — just empathy and a quiet space. Volunteer as a Backroom listener.",
+    "Help others by listening anonymously. No training required — just empathy and a quiet space. Volunteer as a Ongero listener.",
 };
 
 export default function VolunteerPage() {
@@ -12,7 +12,7 @@ export default function VolunteerPage() {
     <div className="min-h-screen bg-obsidian text-white">
       <div className="max-w-3xl mx-auto px-5 md:px-8 py-20">
         <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block">
-          ← Back to Backroom
+          ← Back to Ongero
         </Link>
 
         <h1 className="text-4xl md:text-5xl font-bold mb-6">
@@ -27,7 +27,7 @@ export default function VolunteerPage() {
           {[
             {
               title: "1. Download the app",
-              desc: "Get Backroom on Android. No account required.",
+              desc: "Get Ongero on Android. No account required.",
             },
             {
               title: "2. Switch to Listener mode",

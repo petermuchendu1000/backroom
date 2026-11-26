@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Backroom Brand Colors -->
-    <color name="backroom_purple">#FF6B4EE6</color>
-    <color name="backroom_purple_light">#FF8B7AE8</color>
-    <color name="backroom_purple_dark">#FF5039B8</color>
+    <!-- Ongero Brand Colors -->
+    <color name="ongero_purple">#FF6B4EE6</color>
+    <color name="ongero_purple_light">#FF8B7AE8</color>
+    <color name="ongero_purple_dark">#FF5039B8</color>
 
     <!-- Launcher Icon Background -->
     <color name="ic_launcher_background">#FFFFFFFF</color>

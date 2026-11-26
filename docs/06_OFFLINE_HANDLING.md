@@ -1,8 +1,8 @@
-# Backroom Offline Handling
+# Ongero Offline Handling
 
 ## Overview
 
-Offline handling is critical for Backroom because:
+Offline handling is critical for Ongero because:
 1. Kenya has variable network connectivity
 2. Users may move between WiFi/mobile data
 3. Calls can drop mid-session

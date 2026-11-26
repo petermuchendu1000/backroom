@@ -1,4 +1,4 @@
--- Backroom — M-Pesa payment persistence
+-- Ongero — M-Pesa payment persistence
 --
 -- Runs automatically only on a FRESH database, after 01-init.sql (see the
 -- docker-entrypoint-initdb.d mounts in docker-compose.yml). An already-initialised

@@ -1,4 +1,4 @@
-# Backroom — Development Docker Compose
+# Ongero — Development Docker Compose
 # Start with: docker-compose up -d
 # Requires: Docker, Docker Compose
 
@@ -9,7 +9,7 @@ services:
   # ============================================
   postgres:
     image: postgres:15-alpine
-    container_name: backroom-postgres
+    container_name: ongero-postgres
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-backroom}
@@ -36,7 +36,7 @@ services:
   # ============================================
   redis:
     image: redis:7-alpine
-    container_name: backroom-redis
+    container_name: ongero-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -53,7 +53,7 @@ services:
   # ============================================
   coturn:
     image: coturn/coturn:latest
-    container_name: backroom-coturn
+    container_name: ongero-coturn
     restart: unless-stopped
     ports:
       # STUN/TURN
@@ -86,7 +86,7 @@ services:
     build:
       context: ./backend/rest-api
       dockerfile: Dockerfile
-    container_name: backroom-api
+    container_name: ongero-api
     restart: unless-stopped
     depends_on:
       postgres:
@@ -128,7 +128,7 @@ services:
     build:
       context: ./backend/ws-signaling
       dockerfile: Dockerfile
-    container_name: backroom-ws-signaling
+    container_name: ongero-ws-signaling
     restart: unless-stopped
     depends_on:
       - coturn
@@ -154,5 +154,5 @@ volumes:
 
 networks:
   default:
-    name: backroom-network
+    name: ongero-network
 

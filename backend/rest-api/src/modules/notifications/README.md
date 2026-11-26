@@ -1,6 +1,6 @@
 # Firebase Cloud Messaging (FCM) Notifications
 
-This module handles push notifications for Backroom using Firebase Cloud Messaging.
+This module handles push notifications for Ongero using Firebase Cloud Messaging.
 
 ## Configuration
 
@@ -56,7 +56,7 @@ Sent when M-Pesa payment is confirmed.
 
 ```json
 {
-  "title": "Welcome to Backroom Plus! 🎉",
+  "title": "Welcome to Ongero Plus! 🎉",
   "body": "Your monthly subscription is now active.",
   "data": {
     "type": "subscription_active",
@@ -71,7 +71,7 @@ Sent X days before subscription expires.
 ```json
 {
   "title": "Subscription expiring soon",
-  "body": "Your Backroom Plus subscription expires in 3 days.",
+  "body": "Your Ongero Plus subscription expires in 3 days.",
   "data": {
     "type": "subscription_expiring",
     "days_left": "3"
@@ -137,7 +137,7 @@ dependencies {
 ### 3. Create FirebaseMessagingService
 
 ```kotlin
-class BackroomMessagingService : FirebaseMessagingService() {
+class OngeroMessagingService : FirebaseMessagingService() {
     
     override fun onNewToken(token: String) {
         // Send token to your server
@@ -159,7 +159,7 @@ class BackroomMessagingService : FirebaseMessagingService() {
 
 ```xml
 <service
-    android:name=".BackroomMessagingService"
+    android:name=".OngeroMessagingService"
     android:exported="false">
     <intent-filter>
         <action android:name="com.google.firebase.MESSAGING_EVENT" />
@@ -184,7 +184,7 @@ curl -X POST \
       "token": "DEVICE_TOKEN_HERE",
       "notification": {
         "title": "Test",
-        "body": "Hello from Backroom!"
+        "body": "Hello from Ongero!"
       }
     }
   }'

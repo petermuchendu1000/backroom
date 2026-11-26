@@ -1,6 +1,6 @@
 # coturn (TURN/STUN) Configuration
 
-This directory contains the coturn configuration for Backroom's WebRTC infrastructure.
+This directory contains the coturn configuration for Ongero's WebRTC infrastructure.
 
 ## What is TURN/STUN?
 
@@ -90,7 +90,7 @@ docker-compose up -d coturn
 docker-compose logs -f coturn
 
 # Verify it's running
-docker exec backroom-coturn turnadmin -l
+docker exec ongero-coturn turnadmin -l
 ```
 
 ## Testing TURN

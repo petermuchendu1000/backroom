@@ -26,7 +26,7 @@ fun registerFcmToken() {
 
 ### Files Modified
 - `CallManager.kt` - Added guard flag
-- `BackroomMessagingService.kt` - Added clarifying comments
+- `OngeroMessagingService.kt` - Added clarifying comments
 
 ---
 
@@ -170,7 +170,7 @@ If audio is NOT working, you'll see errors like:
 |------|--------|
 | `CallManager.kt` | Added `hasFcmTokenRegistered` flag, added audio verification on connect |
 | `WebRTCManager.kt` | Enabled speakerphone, added audio callbacks, enhanced logging, added `verifyAudioSetup()` and `logStats()` |
-| `BackroomMessagingService.kt` | Added clarifying comments for FCM token handling |
+| `OngeroMessagingService.kt` | Added clarifying comments for FCM token handling |
 
 ## Testing Recommendations
 

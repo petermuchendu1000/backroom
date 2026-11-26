@@ -32,7 +32,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group" aria-label="Backroom home">
+        <Link href="/" className="flex items-center gap-2 group" aria-label="Ongero home">
           {/* Waveform logo mark */}
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="opacity-80 group-hover:opacity-100 transition-opacity">
             <circle cx="14" cy="14" r="12" stroke="#E6B86A" strokeWidth="1.5" opacity="0.4" />
@@ -59,9 +59,9 @@ export default function Navbar() {
           <Link
             href="#download"
             className="px-5 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-amber to-amber-dark text-obsidian hover:shadow-[0_0_30px_rgba(230,184,106,0.3)] transition-all duration-300"
-            aria-label="Open Backroom app"
+            aria-label="Open Ongero app"
           >
-            Open Backroom
+            Open Ongero
           </Link>
         </div>
 
@@ -114,7 +114,7 @@ export default function Navbar() {
                 onClick={() => setMobileOpen(false)}
                 className="mt-2 px-5 py-3 rounded-full text-center font-medium bg-gradient-to-r from-amber to-amber-dark text-obsidian"
               >
-                Open Backroom
+                Open Ongero
               </Link>
             </div>
           </motion.div>

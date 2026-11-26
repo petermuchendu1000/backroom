@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.backroom"
+    namespace = "com.ongero.app"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.example.backroom"
+        applicationId = "com.ongero.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -130,7 +130,7 @@ dependencies {
     testImplementation(libs.junit)
 
     // Off-device rendering of the redesign screens. These tests live in
-    // com.example.backroom.screenshot and are EXCLUDED from the normal test run
+    // com.ongero.app.screenshot and are EXCLUDED from the normal test run
     // (see the Test task config below) because they are slow and only produce images.
     // Pinned to the last Roborazzi line built against Kotlin 1.9.x: newer releases ship
     // Kotlin 2.3 metadata, which this project's Kotlin 2.0.21 compiler refuses to read.

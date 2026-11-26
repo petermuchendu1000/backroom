@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms of service for using the Backroom anonymous voice support application.",
+  description: "Terms of service for using the Ongero anonymous voice support application.",
 };
 
 export default function TermsPage() {
@@ -11,20 +11,20 @@ export default function TermsPage() {
     <div className="min-h-screen bg-obsidian text-white">
       <div className="max-w-3xl mx-auto px-5 md:px-8 py-20 prose prose-invert prose-sm">
         <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block no-underline">
-          ← Back to Backroom
+          ← Back to Ongero
         </Link>
 
         <h1>Terms of Service</h1>
         <p className="text-white/40">Last updated: April 18, 2026</p>
 
-        <h2>1. What Backroom Is</h2>
+        <h2>1. What Ongero Is</h2>
         <p>
-          Backroom is a peer-to-peer anonymous voice support application. It
+          Ongero is a peer-to-peer anonymous voice support application. It
           connects people who want to talk with people who want to listen, using
           real-time voice anonymization technology.
         </p>
 
-        <h2>2. What Backroom Is NOT</h2>
+        <h2>2. What Ongero Is NOT</h2>
         <ul>
           <li>A crisis intervention service</li>
           <li>A therapy or counseling platform</li>
@@ -33,7 +33,7 @@ export default function TermsPage() {
         </ul>
 
         <h2>3. Eligibility</h2>
-        <p>You must be at least 13 years old to use Backroom.</p>
+        <p>You must be at least 13 years old to use Ongero.</p>
 
         <h2>4. Acceptable Use</h2>
         <p>You agree NOT to:</p>
@@ -55,7 +55,7 @@ export default function TermsPage() {
 
         <h2>6. Disclaimer of Liability</h2>
         <p>
-          Backroom is provided &quot;as is.&quot; We make no guarantees about the
+          Ongero is provided &quot;as is.&quot; We make no guarantees about the
           quality, accuracy, or safety of conversations. Listeners are
           volunteers, not trained professionals. Use at your own discretion.
         </p>
@@ -69,8 +69,8 @@ export default function TermsPage() {
         <h2>8. Contact</h2>
         <p>
           Questions?{" "}
-          <a href="mailto:legal@backroom.llc" className="text-amber">
-            legal@backroom.llc
+          <a href="mailto:legal@ongero.com" className="text-amber">
+            legal@ongero.com
           </a>
         </p>
       </div>

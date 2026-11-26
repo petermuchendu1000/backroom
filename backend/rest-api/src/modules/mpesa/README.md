@@ -1,10 +1,10 @@
 # M-Pesa Integration Guide
 
-This document explains how to set up and use M-Pesa (Safaricom Daraja API) for Backroom subscriptions.
+This document explains how to set up and use M-Pesa (Safaricom Daraja API) for Ongero subscriptions.
 
 ## Overview
 
-Backroom uses **Lipa Na M-Pesa Online (STK Push)** to collect subscription payments. When a user subscribes:
+Ongero uses **Lipa Na M-Pesa Online (STK Push)** to collect subscription payments. When a user subscribes:
 
 1. User enters their Safaricom phone number
 2. App calls our API to initiate payment
@@ -76,7 +76,7 @@ MPESA_CONSUMER_KEY=your_production_key
 MPESA_CONSUMER_SECRET=your_production_secret
 MPESA_SHORTCODE=your_paybill_number
 MPESA_PASSKEY=your_production_passkey
-MPESA_CALLBACK_URL=https://api.backroom.co.ke/api/v1/mpesa/callback
+MPESA_CALLBACK_URL=https://api.ongero.com/api/v1/mpesa/callback
 ```
 
 ## API Endpoints

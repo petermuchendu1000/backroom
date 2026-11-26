@@ -1,8 +1,8 @@
-# Backroom Production Deployment Guide
+# Ongero Production Deployment Guide
 
 ## Prerequisites
 - A cloud server (Ubuntu 22.04 recommended)
-- A domain name (e.g., backroom.app)
+- A domain name (e.g., ongero.com)
 - SSH access to your server
 
 ---
@@ -29,13 +29,13 @@ systemctl start docker
 ### Clone the repository
 ```bash
 cd /opt
-git clone https://github.com/your-repo/backroom.git
-cd backroom
+git clone https://github.com/your-repo/ongero.git
+cd ongero
 ```
 
 ### Create production environment file
 ```bash
-cat > /opt/backroom/backend/.env.production << 'EOF'
+cat > /opt/ongero/backend/.env.production << 'EOF'
 # Database
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
@@ -77,7 +77,7 @@ EOF
 
 ### Create docker-compose.production.yml
 ```bash
-cat > /opt/backroom/docker-compose.production.yml << 'EOF'
+cat > /opt/ongero/docker-compose.production.yml << 'EOF'
 version: '3.8'
 
 services:
@@ -92,7 +92,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     networks:
-      - backroom-network
+      - ongero-network
 
   # Redis
   redis:
@@ -102,7 +102,7 @@ services:
       - redis_data:/data
     restart: unless-stopped
     networks:
-      - backroom-network
+      - ongero-network
 
   # REST API
   rest-api:
@@ -120,7 +120,7 @@ services:
       - redis
     restart: unless-stopped
     networks:
-      - backroom-network
+      - ongero-network
 
   # WebSocket Signaling Server
   ws-signaling:
@@ -136,7 +136,7 @@ services:
       - redis
     restart: unless-stopped
     networks:
-      - backroom-network
+      - ongero-network
 
   # TURN/STUN Server (Coturn)
   coturn:
@@ -163,14 +163,14 @@ services:
       - "49152-49252:49152-49252/udp"
     restart: unless-stopped
     networks:
-      - backroom-network
+      - ongero-network
 
 volumes:
   postgres_data:
   redis_data:
 
 networks:
-  backroom-network:
+  ongero-network:
     driver: bridge
 EOF
 ```
@@ -181,7 +181,7 @@ EOF
 
 ### Create Nginx configuration
 ```bash
-cat > /etc/nginx/sites-available/backroom << 'EOF'
+cat > /etc/nginx/sites-available/ongero << 'EOF'
 # REST API
 server {
     listen 80;
@@ -238,7 +238,7 @@ server {
 }
 EOF
 
-ln -s /etc/nginx/sites-available/backroom /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/ongero /etc/nginx/sites-enabled/
 ```
 
 ### Get SSL Certificates
@@ -251,7 +251,7 @@ certbot --nginx -d api.yourdomain.com -d ws.yourdomain.com
 ## 5. Start Services
 
 ```bash
-cd /opt/backroom
+cd /opt/ongero
 docker-compose -f docker-compose.production.yml up -d
 ```
 

@@ -1,4 +1,4 @@
-# Backroom Legal Documents
+# Ongero Legal Documents
 
 ## Overview
 
@@ -13,24 +13,24 @@ This document contains draft templates for:
 
 # 1. Terms of Service
 
-## Backroom Terms of Service
+## Ongero Terms of Service
 
 **Last Updated:** [Date]
 
-Welcome to Backroom. By using our app, you agree to these Terms of Service ("Terms"). Please read them carefully.
+Welcome to Ongero. By using our app, you agree to these Terms of Service ("Terms"). Please read them carefully.
 
-### 1. About Backroom
+### 1. About Ongero
 
-Backroom is a peer-to-peer voice communication platform that enables anonymous conversations between users seeking to share ("Sharers") and users willing to listen ("Listeners"). Backroom is NOT a mental health service, crisis hotline, or substitute for professional help.
+Ongero is a peer-to-peer voice communication platform that enables anonymous conversations between users seeking to share ("Sharers") and users willing to listen ("Listeners"). Ongero is NOT a mental health service, crisis hotline, or substitute for professional help.
 
 ### 2. Eligibility
 
-To use Backroom, you must:
+To use Ongero, you must:
 - Be at least 18 years old
 - Have the legal capacity to enter into these Terms
 - Not be prohibited from using the service under applicable laws
 
-By using Backroom, you represent that you meet these requirements.
+By using Ongero, you represent that you meet these requirements.
 
 ### 3. Account and Security
 
@@ -38,7 +38,7 @@ By using Backroom, you represent that you meet these requirements.
 You may create an account anonymously or verify with your phone number. You are responsible for maintaining the confidentiality of your account.
 
 3.2 **One Account Per Person**
-You may only have one Backroom account. Creating multiple accounts to evade restrictions is prohibited.
+You may only have one Ongero account. Creating multiple accounts to evade restrictions is prohibited.
 
 3.3 **Account Termination**
 We may suspend or terminate your account if you violate these Terms, without prior notice.
@@ -65,13 +65,13 @@ We may suspend or terminate your account if you violate these Terms, without pri
 
 ### 5. Voice Anonymization
 
-5.1 Backroom uses voice modification technology to help protect your identity. However, we cannot guarantee complete anonymity. Your voice may still be recognizable to people who know you.
+5.1 Ongero uses voice modification technology to help protect your identity. However, we cannot guarantee complete anonymity. Your voice may still be recognizable to people who know you.
 
-5.2 By using Backroom, you acknowledge and accept this limitation.
+5.2 By using Ongero, you acknowledge and accept this limitation.
 
 ### 6. No Recording Policy
 
-6.1 Backroom does not record calls. Attempting to record calls using external means is a violation of these Terms.
+6.1 Ongero does not record calls. Attempting to record calls using external means is a violation of these Terms.
 
 6.2 If we determine that you have recorded a call, your account will be permanently banned, and we may pursue legal action.
 
@@ -81,7 +81,7 @@ We may suspend or terminate your account if you violate these Terms, without pri
 You can report abuse during or after any call. We take all reports seriously and will investigate.
 
 7.2 **Emergency Situations**
-Backroom is not equipped to handle emergencies. If you or someone else is in danger, contact local emergency services immediately.
+Ongero is not equipped to handle emergencies. If you or someone else is in danger, contact local emergency services immediately.
 
 7.3 **Crisis Resources**
 We provide links to crisis resources, but we are not responsible for the services provided by those organizations.
@@ -91,7 +91,7 @@ We provide links to crisis resources, but we are not responsible for the service
 8.1 **Free Tier**
 Basic features are free, with limitations on call duration and frequency.
 
-8.2 **Backroom Plus**
+8.2 **Ongero Plus**
 Premium features are available through subscription. Pricing and features are described in the app.
 
 8.3 **Billing**
@@ -102,13 +102,13 @@ You may cancel your subscription at any time. Access continues until the end of 
 
 ### 9. Intellectual Property
 
-9.1 Backroom and its content, features, and functionality are owned by [Company Name] and protected by intellectual property laws.
+9.1 Ongero and its content, features, and functionality are owned by [Company Name] and protected by intellectual property laws.
 
-9.2 You may not copy, modify, distribute, or create derivative works based on Backroom without our written permission.
+9.2 You may not copy, modify, distribute, or create derivative works based on Ongero without our written permission.
 
 ### 10. Disclaimer of Warranties
 
-10.1 Backroom is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, express or implied.
+10.1 Ongero is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, express or implied.
 
 10.2 We do not warrant that:
 - The service will be uninterrupted or error-free
@@ -118,20 +118,20 @@ You may cancel your subscription at any time. Access continues until the end of 
 
 ### 11. Limitation of Liability
 
-11.1 To the maximum extent permitted by law, [Company Name] shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of Backroom.
+11.1 To the maximum extent permitted by law, [Company Name] shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of Ongero.
 
 11.2 Our total liability shall not exceed the amount you paid us in the 12 months preceding the claim, or KES 5,000, whichever is less.
 
 ### 12. Indemnification
 
 You agree to indemnify and hold harmless [Company Name] from any claims, damages, losses, or expenses arising from:
-- Your use of Backroom
+- Your use of Ongero
 - Your violation of these Terms
 - Your violation of any third-party rights
 
 ### 13. Privacy
 
-Your use of Backroom is also governed by our Privacy Policy, which is incorporated into these Terms by reference.
+Your use of Ongero is also governed by our Privacy Policy, which is incorporated into these Terms by reference.
 
 ### 14. Changes to Terms
 
@@ -144,18 +144,18 @@ These Terms are governed by the laws of Kenya. Any disputes shall be resolved in
 ### 16. Contact Us
 
 If you have questions about these Terms, contact us at:
-- Email: legal@backroom.app
+- Email: legal@ongero.com
 - Address: [Company Address]
 
 ---
 
 # 2. Privacy Policy
 
-## Backroom Privacy Policy
+## Ongero Privacy Policy
 
 **Last Updated:** [Date]
 
-This Privacy Policy describes how Backroom ("we," "us," or "our") collects, uses, and protects your information.
+This Privacy Policy describes how Ongero ("we," "us," or "our") collects, uses, and protects your information.
 
 ### 1. Information We Collect
 
@@ -190,7 +190,7 @@ This Privacy Policy describes how Backroom ("we," "us," or "our") collects, uses
 ### 2. How We Use Your Information
 
 We use your information to:
-- Provide and maintain the Backroom service
+- Provide and maintain the Ongero service
 - Match sharers with appropriate listeners
 - Protect users from abuse and enforce our Terms
 - Improve our service through anonymized analytics
@@ -230,7 +230,7 @@ Under the Kenya Data Protection Act and other applicable laws, you have the righ
 - **Object** - Object to certain processing
 - **Withdraw consent** - Withdraw consent at any time
 
-To exercise these rights, contact us at privacy@backroom.app.
+To exercise these rights, contact us at privacy@ongero.com.
 
 ### 6. Data Security
 
@@ -244,7 +244,7 @@ However, no method of transmission or storage is 100% secure.
 
 ### 7. Children's Privacy
 
-Backroom is not intended for users under 18. We do not knowingly collect information from children. If we discover we have collected information from a child, we will delete it.
+Ongero is not intended for users under 18. We do not knowingly collect information from children. If we discover we have collected information from a child, we will delete it.
 
 ### 8. International Transfers
 
@@ -252,7 +252,7 @@ Your data may be processed outside Kenya. We ensure appropriate safeguards are i
 
 ### 9. Third-Party Services
 
-Backroom uses third-party services that have their own privacy policies:
+Ongero uses third-party services that have their own privacy policies:
 - Google Firebase
 - Google Analytics
 - Google Play Billing
@@ -266,8 +266,8 @@ We may update this Privacy Policy from time to time. We will notify you of mater
 ### 11. Contact Us
 
 For privacy-related inquiries:
-- Email: privacy@backroom.app
-- Data Protection Officer: dpo@backroom.app
+- Email: privacy@ongero.com
+- Data Protection Officer: dpo@ongero.com
 - Address: [Company Address]
 
 ### 12. Kenya Data Protection Act Compliance
@@ -280,9 +280,9 @@ Registration Number: [To be obtained]
 
 # 3. Community Guidelines
 
-## Backroom Community Guidelines
+## Ongero Community Guidelines
 
-Backroom is built on trust, empathy, and respect. These guidelines help maintain a safe and supportive community.
+Ongero is built on trust, empathy, and respect. These guidelines help maintain a safe and supportive community.
 
 ### Our Values
 
@@ -354,14 +354,14 @@ We reserve the right to skip steps for serious violations.
 ### Appeals
 
 If you believe you were unfairly penalized:
-1. Email appeals@backroom.app
+1. Email appeals@ongero.com
 2. Include your anonymous user ID
 3. Explain your situation
 4. We will review within 7 days
 
 ### Mental Health Note
 
-Backroom is a peer support platform, not a mental health service. If you are experiencing:
+Ongero is a peer support platform, not a mental health service. If you are experiencing:
 - Thoughts of self-harm or suicide
 - A mental health crisis
 - An emergency situation
@@ -372,13 +372,13 @@ Please contact professional help:
 
 ### Thank You
 
-Thank you for being part of the Backroom community. Together, we can create a space where everyone feels heard.
+Thank you for being part of the Ongero community. Together, we can create a space where everyone feels heard.
 
 ---
 
 # 4. Cookie Policy (for future web version)
 
-## Backroom Cookie Policy
+## Ongero Cookie Policy
 
 **Last Updated:** [Date]
 
@@ -388,7 +388,7 @@ Thank you for being part of the Backroom community. Together, we can create a sp
 
 # 5. Acceptable Use Policy
 
-## Backroom Acceptable Use Policy
+## Ongero Acceptable Use Policy
 
 This policy supplements our Terms of Service and provides additional detail on acceptable use.
 
@@ -411,7 +411,7 @@ You may not share or discuss:
 
 ### Reporting Vulnerabilities
 
-If you discover a security vulnerability, please report it responsibly to security@backroom.app. Do not exploit or publicly disclose it.
+If you discover a security vulnerability, please report it responsibly to security@ongero.com. Do not exploit or publicly disclose it.
 
 ---
 
@@ -427,7 +427,7 @@ If you discover a security vulnerability, please report it responsibly to securi
 ### For Legal Team:
 1. Review and customize for local laws
 2. Register with Data Protection Commissioner
-3. Set up legal@backroom.app, privacy@backroom.app, appeals@backroom.app
+3. Set up legal@ongero.com, privacy@ongero.com, appeals@ongero.com
 4. Establish response procedures for requests
 5. Document data processing activities
 

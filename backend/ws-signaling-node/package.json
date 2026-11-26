@@ -1,7 +1,7 @@
 {
-  "name": "backroom-signaling",
+  "name": "ongero-signaling",
   "version": "1.0.0",
-  "description": "WebSocket Signaling Server for Backroom",
+  "description": "WebSocket Signaling Server for Ongero",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

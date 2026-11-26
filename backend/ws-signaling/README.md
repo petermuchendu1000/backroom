@@ -1,6 +1,6 @@
-# Backroom WebSocket Signaling Server
+# Ongero WebSocket Signaling Server
 
-Real-time WebSocket server for Backroom. Handles:
+Real-time WebSocket server for Ongero. Handles:
 - Preview delivery to listeners
 - WebRTC signaling (SDP/ICE exchange)
 - Presence & availability management

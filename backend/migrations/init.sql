@@ -1,4 +1,4 @@
--- Backroom — Initial Database Schema
+-- Ongero — Initial Database Schema
 -- This file runs automatically on first Postgres container start
 -- For production, use a migration tool (Flyway, node-pg-migrate, etc.)
 
@@ -410,8 +410,8 @@ INSERT INTO crisis_resources (locale, country_code, name, description, phone, ur
 -- GRANTS (for app user - adjust as needed)
 -- ============================================
 -- In production, create a separate app user with limited privileges
--- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO backroom_app;
--- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO backroom_app;
+-- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ongero_app;
+-- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO ongero_app;
 
-COMMENT ON DATABASE backroom IS 'Backroom - Anonymous voice support platform';
+COMMENT ON DATABASE backroom IS 'Ongero - Anonymous voice support platform';
 

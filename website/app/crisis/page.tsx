@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Crisis Resources",
   description:
-    "If you are in crisis or danger, please reach out to these professional helplines immediately. Backroom is not a crisis service.",
+    "If you are in crisis or danger, please reach out to these professional helplines immediately. Ongero is not a crisis service.",
 };
 
 const resources = [
@@ -45,7 +45,7 @@ export default function CrisisPage() {
     <div className="min-h-screen bg-obsidian text-white">
       <div className="max-w-3xl mx-auto px-5 md:px-8 py-20">
         <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block">
-          ← Back to Backroom
+          ← Back to Ongero
         </Link>
 
         <div className="glass rounded-3xl p-8 md:p-12 mb-8 border-l-4 border-amber">
@@ -53,7 +53,7 @@ export default function CrisisPage() {
             If you are in immediate danger, call your local emergency number.
           </h1>
           <p className="text-white/50 leading-relaxed">
-            Backroom is a peer support app — not a crisis service. If you or
+            Ongero is a peer support app — not a crisis service. If you or
             someone you know is in crisis, please contact one of these
             professional helplines immediately. They are free, confidential, and
             available 24/7.

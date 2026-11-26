@@ -1,8 +1,8 @@
-# Backroom Backend Architecture
+# Ongero Backend Architecture
 
 ## Overview
 
-This document defines the backend architecture for Backroom MVP.
+This document defines the backend architecture for Ongero MVP.
 Tech stack: Firebase (Auth, Firestore, Cloud Functions, FCM).
 Future migration path to PostgreSQL + custom backend at scale.
 
@@ -12,7 +12,7 @@ Future migration path to PostgreSQL + custom backend at scale.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        BACKROOM BACKEND                              │
+│                        ONGERO BACKEND                              │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  ┌──────────────┐                                                   │
@@ -83,7 +83,7 @@ Future migration path to PostgreSQL + custom backend at scale.
 5. If app reinstalled, new anonymous UID created
 ```
 
-### Phone Auth Flow (Backroom Plus)
+### Phone Auth Flow (Ongero Plus)
 
 ```
 1. User taps "Upgrade to Plus"
@@ -973,7 +973,7 @@ function validateIntentLine(text) {
 
 ### Current Limits (Firebase Free Tier)
 
-| Resource | Limit | Backroom Impact |
+| Resource | Limit | Ongero Impact |
 |----------|-------|--------------|
 | Firestore reads | 50K/day | ~5,000 calls/day max |
 | Firestore writes | 20K/day | ~2,000 calls/day max |

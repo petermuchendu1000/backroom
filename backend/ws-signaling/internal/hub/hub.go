@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"github.com/backroom/ws-signaling/internal/fcm"
-	"github.com/backroom/ws-signaling/internal/models"
-	redisClient "github.com/backroom/ws-signaling/internal/redis"
+	"github.com/ongero/ws-signaling/internal/fcm"
+	"github.com/ongero/ws-signaling/internal/models"
+	redisClient "github.com/ongero/ws-signaling/internal/redis"
 )
 
 // generateUUID generates a new UUID string
@@ -857,7 +857,7 @@ func (h *Hub) RegisterClient(conn *websocket.Conn, userID string) *Client {
 			Type: "connected",
 			Payload: map[string]interface{}{
 				"clientId": userID,
-				"message":  "Connected to Backroom signaling server",
+				"message":  "Connected to Ongero signaling server",
 			},
 		})
 	}()
@@ -1027,7 +1027,7 @@ func (h *Hub) handleReport(client *Client, payload interface{}) {
 		Type: models.MsgTypeReportReceived,
 		Payload: map[string]interface{}{
 			"reportId":    report.ID,
-			"message":     "Report received. Thank you for helping keep Backroom safe.",
+			"message":     "Report received. Thank you for helping keep Ongero safe.",
 			"userBlocked": blockUser,
 		},
 	})

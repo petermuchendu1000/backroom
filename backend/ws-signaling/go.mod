@@ -1,4 +1,4 @@
-module github.com/backroom/ws-signaling
+module github.com/ongero/ws-signaling
 
 go 1.21
 

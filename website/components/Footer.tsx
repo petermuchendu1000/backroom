@@ -65,7 +65,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-white/5">
           <p className="text-xs text-white/30">
-            © {new Date().getFullYear()} Backroom. Built in Kenya 🇰🇪 — For
+            © {new Date().getFullYear()} Ongero. Built in Kenya 🇰🇪 — For
             everyone, everywhere.
           </p>
           <div className="flex items-center gap-3 text-xs text-white/30">

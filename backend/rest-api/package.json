@@ -1,8 +1,8 @@
 {
-  "name": "backroom-api",
+  "name": "ongero-api",
   "version": "1.0.0",
-  "description": "Backroom REST API - Anonymous voice support platform",
-  "author": "Backroom Team",
+  "description": "Ongero REST API - Anonymous voice support platform",
+  "author": "Ongero Team",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {

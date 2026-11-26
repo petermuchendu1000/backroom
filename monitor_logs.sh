@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Backroom Real-Time Log Monitor
+# Ongero Real-Time Log Monitor
 # ================================
 # This script monitors both Android app logs and server logs in real-time
 
 echo "=========================================="
-echo "🔍 BACKROOM REAL-TIME LOG MONITOR"
+echo "🔍 ONGERO REAL-TIME LOG MONITOR"
 echo "=========================================="
 echo ""
 
@@ -25,7 +25,7 @@ if [ "$DEVICES" -eq 0 ]; then
     echo ""
     echo "📋 Server logs only:"
     echo "----------------------------------------"
-    docker logs -f backroom-ws-signaling
+    docker logs -f ongero-ws-signaling
 else
     echo "✅ Found $DEVICES device(s)"
     echo ""
@@ -38,6 +38,6 @@ else
     "$ADB" logcat -c
 
     # Monitor both app logs
-    "$ADB" logcat -v time | grep -E "(ListenerService|MainActivity|CallManager|SignalingClient|HomeScreen|WaitingScreen|InCallScreen|WebRTCManager|BackroomApp)" --line-buffered
+    "$ADB" logcat -v time | grep -E "(ListenerService|MainActivity|CallManager|SignalingClient|HomeScreen|WaitingScreen|InCallScreen|WebRTCManager|OngeroApp)" --line-buffered
 fi
 

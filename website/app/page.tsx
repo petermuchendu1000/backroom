@@ -104,7 +104,7 @@ export default function Home() {
                 <a
                   href="#download"
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-semibold text-lg bg-gradient-to-r from-amber to-amber-dark text-obsidian hover:shadow-[0_0_40px_rgba(230,184,106,0.25)] transition-all duration-300"
-                  aria-label="Download Backroom for Android"
+                  aria-label="Download Ongero for Android"
                   onMouseEnter={() => setSoftPreviewOpen(true)}
                   onMouseLeave={() => setSoftPreviewOpen(false)}
                 >
@@ -512,14 +512,14 @@ export default function Home() {
             variants={fadeUp}
             className="text-white/40 text-lg mb-10 max-w-md mx-auto"
           >
-            Download Backroom and connect with someone who will listen.
+            Download Ongero and connect with someone who will listen.
             Available on Android.
           </motion.p>
           <motion.div custom={2} variants={fadeUp} className="flex flex-col items-center gap-4">
             <a
               href="#"
               className="inline-flex items-center gap-3 px-10 py-5 rounded-full bg-gradient-to-r from-amber to-amber-dark text-obsidian font-semibold text-lg hover:shadow-[0_0_50px_rgba(230,184,106,0.3)] transition-all duration-300"
-              aria-label="Get Backroom on Google Play"
+              aria-label="Get Ongero on Google Play"
             >
               <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current">
                 <path d="M3.609 1.814 13.793 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893 2.302 2.302-10.937 6.333 8.635-8.635zM18.8 11.15l2.807 1.627a1 1 0 0 1 0 1.726l-2.808 1.626L16.13 12l2.67-2.85zM5.863 3.45 16.8 9.784l-2.302 2.302L5.863 3.45z" />
@@ -540,7 +540,7 @@ export default function Home() {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "MobileApplication",
-            name: "Backroom",
+            name: "Ongero",
             operatingSystem: "Android",
             applicationCategory: "HealthApplication",
             description:
@@ -633,16 +633,16 @@ function FAQItem({ q, a, i }: { q: string; a: string; i: number }) {
 /* ─── FAQ Data ─── */
 const faqs = [
   {
-    q: "Is Backroom really anonymous?",
+    q: "Is Ongero really anonymous?",
     a: "Yes. There are no accounts, no email addresses, no phone numbers, and no profile pictures. Your voice is anonymized in real-time using voice masking technology before it leaves your device. We store zero personal data.",
   },
   {
     q: "Is this free? What\u2019s the catch?",
-    a: "The core experience \u2014 anonymous voice support \u2014 is completely free. There\u2019s no catch. An optional Backroom Plus subscription unlocks longer calls and extra features, but venting anonymously is always free.",
+    a: "The core experience \u2014 anonymous voice support \u2014 is completely free. There\u2019s no catch. An optional Ongero Plus subscription unlocks longer calls and extra features, but venting anonymously is always free.",
   },
   {
     q: "I can\u2019t afford therapy. Is this a replacement?",
-    a: "Backroom is NOT therapy and not a replacement for professional mental health treatment. It\u2019s peer support \u2014 a real human who will listen without judgment. If you need professional help, we always provide crisis resources.",
+    a: "Ongero is NOT therapy and not a replacement for professional mental health treatment. It\u2019s peer support \u2014 a real human who will listen without judgment. If you need professional help, we always provide crisis resources.",
   },
   {
     q: "What if I\u2019m in crisis right now?",
@@ -650,7 +650,7 @@ const faqs = [
   },
   {
     q: "How is this different from calling a hotline?",
-    a: "Hotlines are staffed by trained counselors for emergencies. Backroom is peer-to-peer \u2014 you\u2019re talking to another regular human who volunteered to listen. No forms, no follow-up calls, no case files.",
+    a: "Hotlines are staffed by trained counselors for emergencies. Ongero is peer-to-peer \u2014 you\u2019re talking to another regular human who volunteered to listen. No forms, no follow-up calls, no case files.",
   },
   {
     q: "What does \u2018Soft Preview\u2019 mean?",

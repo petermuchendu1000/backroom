@@ -8,7 +8,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/backroom/ws-signaling/internal/auth"
+	"github.com/ongero/ws-signaling/internal/auth"
 )
 
 const testSecret = "test_secret_for_unit_tests"

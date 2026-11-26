@@ -224,7 +224,7 @@ export class NotificationsService implements OnModuleInit {
   }
 
   // ============================================
-  // Backroom-specific notification methods
+  // Ongero-specific notification methods
   // ============================================
 
   /**
@@ -281,7 +281,7 @@ export class NotificationsService implements OnModuleInit {
     return this.sendToToken({
       token: userToken,
       notification: {
-        title: 'Welcome to Backroom Plus! 🎉',
+        title: 'Welcome to Ongero Plus! 🎉',
         body: `Your ${plan} subscription is now active. Enjoy extended calls and priority matching.`,
         data: {
           type: 'subscription_active',
@@ -299,7 +299,7 @@ export class NotificationsService implements OnModuleInit {
       token: userToken,
       notification: {
         title: 'Subscription expiring soon',
-        body: `Your Backroom Plus subscription expires in ${daysLeft} days. Renew to keep your benefits.`,
+        body: `Your Ongero Plus subscription expires in ${daysLeft} days. Renew to keep your benefits.`,
         data: {
           type: 'subscription_expiring',
           days_left: daysLeft.toString(),

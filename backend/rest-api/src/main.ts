@@ -30,7 +30,7 @@ async function bootstrap() {
 
   // Swagger API documentation
   const config = new DocumentBuilder()
-    .setTitle('Backroom API')
+    .setTitle('Ongero API')
     .setDescription('Anonymous voice support platform API')
     .setVersion('1.0')
     .addBearerAuth()
@@ -51,7 +51,7 @@ async function bootstrap() {
   const port = process.env.PORT || 8080;
   await app.listen(port);
 
-  console.log(`🚀 Backroom API running on http://localhost:${port}`);
+  console.log(`🚀 Ongero API running on http://localhost:${port}`);
   console.log(`📚 API Docs available at http://localhost:${port}/docs`);
 }
 

@@ -15,10 +15,10 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://backroom.llc"),
+  metadataBase: new URL("https://ongero.com"),
   title: {
-    default: "Backroom — Anonymous Voice Support | Talk to Someone Who Cares",
-    template: "%s | Backroom",
+    default: "Ongero — Anonymous Voice Support | Talk to Someone Who Cares",
+    template: "%s | Ongero",
   },
   description:
     "Free anonymous voice support for anxiety, depression, loneliness, and life struggles. No profiles, no history — just real human connection with voice anonymization. Available 24/7.",
@@ -60,22 +60,22 @@ export const metadata: Metadata = {
     "voice support not text",
   ],
   openGraph: {
-    title: "Backroom — Anonymous Voice Support",
+    title: "Ongero — Anonymous Voice Support",
     description:
       "Talk to someone who cares. Anonymous, consent-first voice conversations. No profiles. No history. Just a moment of connection.",
     type: "website",
-    url: "https://backroom.llc",
-    siteName: "Backroom",
+    url: "https://ongero.com",
+    siteName: "Ongero",
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Backroom — Anonymous Voice Support",
+    title: "Ongero — Anonymous Voice Support",
     description:
       "Free anonymous voice support. Talk. Listen. Connect. Your voice is modified. Your identity is hidden.",
   },
   robots: { index: true, follow: true },
-  alternates: { canonical: "https://backroom.llc" },
+  alternates: { canonical: "https://ongero.com" },
 };
 
 export default function RootLayout({

@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Backroom"
+rootProject.name = "Ongero"
 include(":app")
  

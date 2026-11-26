@@ -49,7 +49,7 @@ export class MpesaController {
       phoneNumber: dto.phoneNumber,
       amount,
       accountReference: `BKRM${userId?.slice(0, 6) || 'SUB'}`,
-      transactionDesc: `Backroom ${dto.plan}`,
+      transactionDesc: `Ongero ${dto.plan}`,
     });
 
     // Record the attempt before the prompt is answered. The callback carries nothing

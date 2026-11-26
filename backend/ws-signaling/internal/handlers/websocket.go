@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
-	"github.com/backroom/ws-signaling/internal/auth"
-	"github.com/backroom/ws-signaling/internal/hub"
+	"github.com/ongero/ws-signaling/internal/auth"
+	"github.com/ongero/ws-signaling/internal/hub"
 )
 
 var upgrader = websocket.Upgrader{

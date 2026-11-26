@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Backroom's privacy policy. We collect zero personal data. Your voice is anonymized on-device.",
+  description: "Ongero's privacy policy. We collect zero personal data. Your voice is anonymized on-device.",
 };
 
 export default function PrivacyPage() {
@@ -11,7 +11,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-obsidian text-white">
       <div className="max-w-3xl mx-auto px-5 md:px-8 py-20 prose prose-invert prose-sm">
         <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block no-underline">
-          ← Back to Backroom
+          ← Back to Ongero
         </Link>
 
         <h1>Privacy Policy</h1>
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
 
         <h2>Our Core Principle</h2>
         <p>
-          Backroom is built on the principle of <strong>zero knowledge</strong>.
+          Ongero is built on the principle of <strong>zero knowledge</strong>.
           We cannot identify you because we never collect identifying information
           in the first place.
         </p>
@@ -69,15 +69,15 @@ export default function PrivacyPage() {
 
         <h2>Children</h2>
         <p>
-          Backroom is not intended for users under 13. We do not knowingly
+          Ongero is not intended for users under 13. We do not knowingly
           collect data from children.
         </p>
 
         <h2>Contact</h2>
         <p>
           Questions about privacy? Email{" "}
-          <a href="mailto:privacy@backroom.llc" className="text-amber">
-            privacy@backroom.llc
+          <a href="mailto:privacy@ongero.com" className="text-amber">
+            privacy@ongero.com
           </a>
         </p>
       </div>

@@ -1,8 +1,8 @@
-# Backroom Authentication Flow
+# Ongero Authentication Flow
 
 ## Overview
 
-Backroom uses a tiered authentication system:
+Ongero uses a tiered authentication system:
 - **Free tier**: Anonymous auth (zero friction)
 - **Plus tier**: Phone auth (verified identity for premium features)
 

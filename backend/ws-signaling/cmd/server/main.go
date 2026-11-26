@@ -9,16 +9,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/backroom/ws-signaling/internal/auth"
-	"github.com/backroom/ws-signaling/internal/fcm"
-	"github.com/backroom/ws-signaling/internal/handlers"
-	"github.com/backroom/ws-signaling/internal/hub"
-	"github.com/backroom/ws-signaling/internal/matching"
-	redisClient "github.com/backroom/ws-signaling/internal/redis"
+	"github.com/ongero/ws-signaling/internal/auth"
+	"github.com/ongero/ws-signaling/internal/fcm"
+	"github.com/ongero/ws-signaling/internal/handlers"
+	"github.com/ongero/ws-signaling/internal/hub"
+	"github.com/ongero/ws-signaling/internal/matching"
+	redisClient "github.com/ongero/ws-signaling/internal/redis"
 )
 
 func main() {
-	log.Println("🚀 Starting Backroom WebSocket Signaling Server...")
+	log.Println("🚀 Starting Ongero WebSocket Signaling Server...")
 
 	// Load configuration
 	config := loadConfig()
