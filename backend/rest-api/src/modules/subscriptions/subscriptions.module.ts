@@ -2,15 +2,15 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { User } from '../../database/entities/user.entity';
-import { MpesaModule } from '../mpesa/mpesa.module';
+import { SubscriptionsController } from './subscriptions.controller';
 import { SubscriptionsService } from './subscriptions.service';
 import { SubscriptionsSweep } from './subscriptions.sweep';
 
-// Subscriptions module - manages subscription state
-// Integrates with M-Pesa for payments
+// Owns subscription state. It no longer imports MpesaModule: nothing here used it, and
+// AuthModule now depends on this module, so an unnecessary edge risks a cycle later.
 @Module({
-  imports: [MpesaModule, TypeOrmModule.forFeature([Subscription, User])],
-  controllers: [],
+  imports: [TypeOrmModule.forFeature([Subscription, User])],
+  controllers: [SubscriptionsController],
   providers: [SubscriptionsService, SubscriptionsSweep],
   exports: [SubscriptionsService],
 })

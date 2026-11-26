@@ -11,7 +11,13 @@ export const databaseConfig = (
   password: configService.get<string>('database.password'),
   database: configService.get<string>('database.database'),
   entities: [__dirname + '/../database/entities/*.entity{.ts,.js}'],
-  synchronize: configService.get<string>('nodeEnv') === 'development', // Only for dev!
+  // OFF everywhere. The schema is owned by backend/migrations/*.sql, and the entities
+  // do not describe it exactly (column types, the shared subscription_tier enum). With
+  // synchronize on, TypeORM tries to reconcile the difference with destructive DDL: it
+  // was observed renaming subscription_tier and attempting to DROP it, which fails
+  // because subscriptions.tier also uses it — and on a database where it did not fail,
+  // it would have rewritten columns instead.
+  synchronize: false,
   logging: configService.get<string>('nodeEnv') === 'development',
   ssl: configService.get<string>('nodeEnv') === 'production'
     ? { rejectUnauthorized: false }

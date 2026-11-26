@@ -44,7 +44,24 @@ export class SubscriptionsService {
    * from the cached column on users.
    */
   async currentTier(userId: string, now: Date = new Date()): Promise<SubscriptionTier> {
-    const active = await this.subscriptions
+    return (await this.liveSubscription(userId, now))?.tier ?? SubscriptionTier.FREE;
+  }
+
+  /** Tier plus when it runs out, for anything that shows the person their status. */
+  async current(
+    userId: string,
+    now: Date = new Date(),
+  ): Promise<{ tier: SubscriptionTier; expiresAt: Date | null }> {
+    const live = await this.liveSubscription(userId, now);
+    return {
+      tier: live?.tier ?? SubscriptionTier.FREE,
+      expiresAt: live?.expiresAt ?? null,
+    };
+  }
+
+  /** The one definition of "currently entitled", used by everything above. */
+  private async liveSubscription(userId: string, now: Date): Promise<Subscription | null> {
+    return this.subscriptions
       .createQueryBuilder('s')
       .where('s.user_id = :userId', { userId })
       .andWhere('s.is_active = true')
@@ -52,8 +69,6 @@ export class SubscriptionsService {
       .andWhere('(s.expires_at IS NULL OR s.expires_at > :now)', { now })
       .orderBy('s.expires_at', 'DESC', 'NULLS FIRST')
       .getOne();
-
-    return active?.tier ?? SubscriptionTier.FREE;
   }
 
   async isPlus(userId: string, now: Date = new Date()): Promise<boolean> {

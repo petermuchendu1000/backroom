@@ -1,13 +1,17 @@
 import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { AnonymousAuthDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly subscriptions: SubscriptionsService,
+  ) {}
 
   /**
    * Authenticate anonymously with device ID
@@ -46,7 +50,8 @@ export class AuthController {
     return {
       id: req.user.id,
       anonymous: req.user.anonymous,
-      subscriptionTier: req.user.subscriptionTier,
+      // Derived, so this never reports Plus to someone whose period has ended.
+      subscriptionTier: await this.subscriptions.currentTier(req.user.id),
       createdAt: req.user.createdAt,
     };
   }
