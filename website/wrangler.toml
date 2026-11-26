@@ -1,0 +1,17 @@
+# Cloudflare Pages project for the Ongero marketing site.
+#
+# The site is a static export (see next.config.ts), so Pages serves plain files from
+# its edge: no Workers runtime, no Next.js adapter to keep in step with releases, and
+# nothing that can fail at request time.
+#
+# Deploy:
+#     cd website
+#     npm ci && npx next build          # produces out/
+#     npx wrangler pages deploy         # reads pages_build_output_dir below
+#
+# Needs CLOUDFLARE_API_TOKEN with "Cloudflare Pages: Edit" on the account, and
+# CLOUDFLARE_ACCOUNT_ID. A DNS-scoped token is not enough.
+
+name = "ongero"
+pages_build_output_dir = "out"
+compatibility_date = "2026-11-26"
