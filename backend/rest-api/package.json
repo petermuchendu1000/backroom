@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:generate": "typeorm migration:generate -d src/database/data-source.ts",
     "migration:run": "typeorm migration:run -d src/database/data-source.ts",
-    "migration:revert": "typeorm migration:revert -d src/database/data-source.ts"
+    "migration:revert": "typeorm migration:revert -d src/database/data-source.ts",
+    "backfill:tiers": "ts-node scripts/backfill-tiers.ts"
   },
   "dependencies": {
     "@nestjs/axios": "^3.0.0",
