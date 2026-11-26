@@ -1,10 +1,10 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Check, Headphones, Heart, Lock, Shield, Smartphone } from "lucide-react";
 import { CallWalkthrough, VoiceMaskingDemo } from "@/components/LandingDemos";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import FAQList from "@/components/FAQList";
+import { questions } from "./faq-content";
 import styles from "./landing.module.css";
 
 const description =
@@ -31,8 +31,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { themeColor: "#f8f4fb" };
-
 const conversationStarters = [
   "I miss someone I’m still upset with.",
   "Something good happened, and I wanted to tell someone.",
@@ -57,29 +55,6 @@ const privacyDetails = [
   },
 ];
 
-const faqs = [
-  {
-    question: "Who’s on the other end?",
-    answer: "A volunteer listener. Their role is to hear you out and give you time to talk.",
-  },
-  {
-    question: "What can I talk about?",
-    answer: "Whatever is on your mind today. A hard conversation, something you’re excited about, or a feeling you’re still figuring out are all reasons to talk.",
-  },
-  {
-    question: "Who can use Ongero?",
-    answer: "You can use Ongero if you’re 13 or older. The core voice support experience is free.",
-  },
-  {
-    question: "Can I get professional help through Ongero?",
-    answer: "Ongero offers peer support from volunteers. For therapy, diagnosis, or treatment, you can reach out to a qualified mental health professional.",
-  },
-  {
-    question: "When can I download Ongero?",
-    answer: "Ongero for Android is coming soon to Google Play.",
-  },
-];
-
 function Waveform() {
   return (
     <span className={styles.waveform} aria-hidden="true">
@@ -90,154 +65,143 @@ function Waveform() {
 
 export default function Home() {
   return (
-    <div className={styles.landing}>
-      <a className={styles.skipLink} href="#main-content">Skip to content</a>
-      <Navbar />
+    <>
+      <section className={styles.hero} aria-labelledby="hero-title">
+        <div className={styles.wrap}>
+          <div className={styles.heroBody}>
+            <div className={styles.heroCopy}>
+              <p className={styles.eyebrow}>Anonymous voice support</p>
+              <h1 id="hero-title">Want someone to <em>listen for a bit?</em></h1>
+              <p className={styles.heroIntro}>
+                Talk for a few minutes with a volunteer listener. Start wherever you can.
+                Share as much or as little as you like.
+              </p>
 
-      <main id="main-content">
-        <section className={styles.hero} aria-labelledby="hero-title">
-          <div className={styles.wrap}>
-            <div className={styles.heroBody}>
-              <div className={styles.heroCopy}>
-                <p className={styles.eyebrow}>Anonymous voice support</p>
-                <h1 id="hero-title">Want someone to <em>listen for a bit?</em></h1>
-                <p className={styles.heroIntro}>
-                  Talk for a few minutes with a volunteer listener. Start wherever you can.
-                  Share as much or as little as you like.
-                </p>
-
-                <div className={styles.actions}>
-                  <a className={styles.primary} href="#how-it-works">See what a call is like</a>
-                  <a className={styles.textLink} href="#listen">I’d like to listen</a>
-                </div>
-
-                <ul className={styles.trust}>
-                  <li><Check size={17} aria-hidden="true" /> Free voice support</li>
-                  <li><Check size={17} aria-hidden="true" /> No account needed</li>
-                </ul>
+              <div className={styles.actions}>
+                <a className={styles.primary} href="#how-it-works">See what a call is like</a>
+                <a className={styles.textLink} href="#listen">I’d like to listen</a>
               </div>
 
-              <figure className={styles.heroVisual}>
-                <Image
-                  src="/ongero/someone-to-talk-to.webp"
-                  alt="A woman taking a quiet moment to talk on her phone by a window."
-                  fill
-                  loading="eager"
-                  fetchPriority="high"
-                  sizes="(max-width: 780px) 94vw, (max-width: 1230px) 49vw, 620px"
-                />
-                <figcaption className={styles.callCaption}>
-                  <span className={styles.callCaptionIcon}><Waveform /></span>
-                  <span className={styles.captionText}><small>Example Ongero call</small><strong>Take your time.</strong></span>
-                </figcaption>
-              </figure>
+              <ul className={styles.trust}>
+                <li><Check size={17} aria-hidden="true" /> Free voice support</li>
+                <li><Check size={17} aria-hidden="true" /> No account needed</li>
+              </ul>
             </div>
-          </div>
-        </section>
 
-        <section className={styles.starters} aria-labelledby="starters-title">
-          <div className={styles.wrap}>
-            <div className={styles.startersHeading}>
-              <h2 id="starters-title">You can start with one sentence.</h2>
-              <p>If you need a moment to find the next words, take it.</p>
-            </div>
-            <ul className={styles.quoteGrid}>
-              {conversationStarters.map((starter) => (
-                <li key={starter}><p>“{starter}”</p></li>
-              ))}
-            </ul>
+            <figure className={styles.heroVisual}>
+              <Image
+                src="/ongero/someone-to-talk-to.webp"
+                alt="A woman taking a quiet moment to talk on her phone by a window."
+                fill
+                loading="eager"
+                fetchPriority="high"
+                sizes="(max-width: 780px) 94vw, (max-width: 1230px) 49vw, 620px"
+              />
+              <figcaption className={styles.callCaption}>
+                <span className={styles.callCaptionIcon}><Waveform /></span>
+                <span className={styles.captionText}><small>Example Ongero call</small><strong>Take your time.</strong></span>
+              </figcaption>
+            </figure>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section id="how-it-works" className={styles.walkthrough} aria-labelledby="how-title">
-          <div className={styles.wrap}>
-            <p className={styles.eyebrow}>How it works</p>
-            <h2 id="how-title">A few minutes, on your terms.</h2>
-            <CallWalkthrough />
+      <section className={styles.starters} aria-labelledby="starters-title">
+        <div className={styles.wrap}>
+          <div className={styles.startersHeading}>
+            <h2 id="starters-title">You can start with one sentence.</h2>
+            <p>If you need a moment to find the next words, take it.</p>
           </div>
-        </section>
+          <ul className={styles.quoteGrid}>
+            {conversationStarters.map((starter) => (
+              <li key={starter}><p>“{starter}”</p></li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
-        <section id="safety" className={styles.safety} aria-labelledby="safety-title">
-          <div className={styles.wrap}>
-            <div className={styles.safetyGrid}>
-              <div>
-                <p className={styles.eyebrow}>Privacy &amp; safety</p>
-                <h2 id="safety-title">Some things can stay yours.</h2>
-                <ul className={styles.privacyList}>
-                  {privacyDetails.map(({ icon: Icon, title, copy }) => (
-                    <li key={title}>
-                      <span className={styles.privacyIcon}><Icon size={19} aria-hidden="true" /></span>
-                      <div><h3>{title}</h3><p>{copy}</p></div>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/privacy" className={styles.textLink}>Read the privacy policy</Link>
-              </div>
-              <VoiceMaskingDemo />
-            </div>
-          </div>
-        </section>
+      <section id="how-it-works" className={styles.walkthrough} aria-labelledby="how-title">
+        <div className={styles.wrap}>
+          <p className={styles.eyebrow}>How it works</p>
+          <h2 id="how-title">A few minutes, on your terms.</h2>
+          <CallWalkthrough />
+        </div>
+      </section>
 
-        <section id="listen" className={styles.listen} aria-labelledby="listen-title">
-          <div className={styles.wrap}>
-            <div className={styles.listenGrid}>
-              <figure className={styles.listenPhoto}>
-                <Image
-                  src="/ongero/room-to-listen.webp"
-                  alt="A man wearing an earbud listens quietly by a window."
-                  fill
-                  sizes="(max-width: 780px) 94vw, (max-width: 1230px) 46vw, 570px"
-                />
-              </figure>
-              <div className={styles.listenCopy}>
-                <p className={styles.eyebrow}>For listeners</p>
-                <h2 id="listen-title">Have a few minutes to listen?</h2>
-                <p>
-                  Sometimes the kindest thing you can say is, “Take your time. I’m listening.”
-                  Give the other person a moment to finish their thought.
-                </p>
-                <p>Choose the conversations you feel ready for, when you have time to give.</p>
-                <Link className={styles.secondary} href="/volunteer">Learn about being a listener</Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" className={styles.faq} aria-labelledby="faq-title">
-          <div className={styles.wrap}>
-            <div className={styles.faqGrid}>
-              <div><h2 id="faq-title">A few questions.</h2></div>
-              <div className={styles.faqItems}>
-                {faqs.map(({ question, answer }) => (
-                  <details key={question}>
-                    <summary>{question}<span aria-hidden="true" /></summary>
-                    <p>{answer}</p>
-                  </details>
+      <section id="safety" className={styles.safety} aria-labelledby="safety-title">
+        <div className={styles.wrap}>
+          <div className={styles.safetyGrid}>
+            <div>
+              <p className={styles.eyebrow}>Privacy &amp; safety</p>
+              <h2 id="safety-title">Some things can stay yours.</h2>
+              <ul className={styles.privacyList}>
+                {privacyDetails.map(({ icon: Icon, title, copy }) => (
+                  <li key={title}>
+                    <span className={styles.privacyIcon}><Icon size={19} aria-hidden="true" /></span>
+                    <div><h3>{title}</h3><p>{copy}</p></div>
+                  </li>
                 ))}
-              </div>
+              </ul>
+              <Link href="/privacy" className={styles.textLink}>Read the privacy policy</Link>
+            </div>
+            <VoiceMaskingDemo />
+          </div>
+        </div>
+      </section>
+
+      <section id="listen" className={styles.listen} aria-labelledby="listen-title">
+        <div className={styles.wrap}>
+          <div className={styles.listenGrid}>
+            <figure className={styles.listenPhoto}>
+              <Image
+                src="/ongero/room-to-listen.webp"
+                alt="A man wearing an earbud listens quietly by a window."
+                fill
+                sizes="(max-width: 780px) 94vw, (max-width: 1230px) 46vw, 570px"
+              />
+            </figure>
+            <div className={styles.listenCopy}>
+              <p className={styles.eyebrow}>For listeners</p>
+              <h2 id="listen-title">Have a few minutes to listen?</h2>
+              <p>
+                Sometimes the kindest thing you can say is, “Take your time. I’m listening.”
+                Give the other person a moment to finish their thought.
+              </p>
+              <p>Choose the conversations you feel ready for, when you have time to give.</p>
+              <Link className={styles.secondary} href="/volunteer">Learn about being a listener</Link>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className={styles.launch} id="download" aria-labelledby="download-title">
-          <div className={styles.wrap}>
-            <div className={styles.launchCard}>
-              <span className={styles.launchIcon}><Smartphone size={27} aria-hidden="true" /></span>
-              <div>
-                <h2 id="download-title">Get Ongero for Android.</h2>
-                <p>Coming soon to Google Play.</p>
-              </div>
+      <section id="faq" className={styles.faq} aria-labelledby="faq-title">
+        <div className={styles.wrap}>
+          <div className={styles.faqGrid}>
+            <div>
+              <h2 id="faq-title">A few questions.</h2>
+              <Link href="/faq" className={styles.textLink}>View all questions</Link>
             </div>
-            <div className={styles.supportStrip}>
-              <Heart size={21} aria-hidden="true" />
-              <div><strong>Need help right now?</strong><p>Find urgent support for where you live.</p></div>
-              <Link href="/crisis" className={styles.textLink}>Find urgent support</Link>
+            <FAQList questions={questions.slice(0, 4)} />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.launch} id="download" aria-labelledby="download-title">
+        <div className={styles.wrap}>
+          <div className={styles.launchCard}>
+            <span className={styles.launchIcon}><Smartphone size={27} aria-hidden="true" /></span>
+            <div>
+              <h2 id="download-title">Get Ongero for Android.</h2>
+              <p>Coming soon to Google Play.</p>
             </div>
           </div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
+          <div className={styles.supportStrip}>
+            <Heart size={21} aria-hidden="true" />
+            <div><strong>Need help right now?</strong><p>Find urgent support for where you live.</p></div>
+            <Link href="/crisis" className={styles.textLink}>Find urgent support</Link>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

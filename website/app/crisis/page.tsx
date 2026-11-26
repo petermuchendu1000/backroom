@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Heart } from "lucide-react";
+import { RegionResources } from "@/components/SupportingInteractions";
+import site from "../landing.module.css";
+import styles from "../supporting.module.css";
 
 export const metadata: Metadata = {
-  title: "Crisis Resources",
-  description:
-    "If you are in crisis or danger, please reach out to these professional helplines immediately. Backroom is not a crisis service.",
+  title: "Urgent Support",
+  description: "Find urgent support and crisis resources for your country or region.",
+  alternates: { canonical: "/crisis" },
 };
 
 const resources = [
@@ -42,48 +45,16 @@ const resources = [
 
 export default function CrisisPage() {
   return (
-    <div className="min-h-screen bg-obsidian text-white">
-      <div className="max-w-3xl mx-auto px-5 md:px-8 py-20">
-        <Link href="/" className="text-amber/60 hover:text-amber text-sm mb-8 inline-block">
-          ← Back to Backroom
-        </Link>
-
-        <div className="glass rounded-3xl p-8 md:p-12 mb-8 border-l-4 border-amber">
-          <h1 className="text-3xl font-bold mb-4">
-            If you are in immediate danger, call your local emergency number.
-          </h1>
-          <p className="text-white/50 leading-relaxed">
-            Backroom is a peer support app — not a crisis service. If you or
-            someone you know is in crisis, please contact one of these
-            professional helplines immediately. They are free, confidential, and
-            available 24/7.
-          </p>
+    <div className={styles.crisisPage}>
+      <div className={site.wrap}>
+        <div className={styles.crisisIntro}>
+          <span className={styles.crisisIcon}><Heart size={25} aria-hidden="true" /></span>
+          <h1 className={styles.pageTitle}>Need help right now?</h1>
+          <p className={styles.emergency}>If you’re in immediate danger, call your local emergency services.</p>
+          <p className={styles.lead}>If you need urgent emotional support, choose your country or region below to find help.</p>
         </div>
-
-        {resources.map((r) => (
-          <div key={r.region} className="mb-10">
-            <h2 className="text-lg font-semibold text-white/70 mb-4">{r.region}</h2>
-            <div className="space-y-3">
-              {r.lines.map((line) => (
-                <a
-                  key={line.name}
-                  href={line.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="glass glass-hover rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 block"
-                >
-                  <div>
-                    <p className="font-medium">{line.name}</p>
-                    <p className="text-sm text-amber">{line.contact}</p>
-                  </div>
-                  <span className="text-xs text-white/30">Visit →</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        ))}
+        <RegionResources regions={resources} />
       </div>
     </div>
   );
 }
-

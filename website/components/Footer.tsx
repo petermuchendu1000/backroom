@@ -11,11 +11,12 @@ export default function Footer() {
             Ongero
           </Link>
           <nav aria-label="Footer navigation">
-            <a href="#how-it-works">How it works</a>
-            <a href="#faq">FAQ</a>
+            <Link href="/#how-it-works">How it works</Link>
+            <Link href="/faq">FAQ</Link>
             <Link href="/volunteer">Volunteer</Link>
             <Link href="/privacy">Privacy</Link>
             <Link href="/terms">Terms</Link>
+            <Link href="/crisis">Urgent help</Link>
           </nav>
         </div>
         <p>© {new Date().getFullYear()} Ongero. Built in Kenya.</p>

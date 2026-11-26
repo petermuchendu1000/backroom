@@ -2,17 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Heart, Menu, X } from "lucide-react";
 import styles from "@/app/landing.module.css";
 
 const navigation = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#safety", label: "Privacy & safety" },
-  { href: "#listen", label: "For listeners" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/privacy", label: "Privacy & safety" },
+  { href: "/volunteer", label: "For listeners" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   const menuButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -37,10 +40,10 @@ export default function Navbar() {
             Ongero
           </Link>
           <div className={styles.desktopNav}>
-            {navigation.map(({ href, label }) => <a key={href} href={href}>{label}</a>)}
+            {navigation.map(({ href, label }) => <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined}>{label}</Link>)}
           </div>
           <div className={styles.navActions}>
-            <Link href="/crisis" className={styles.urgent}>
+            <Link href="/crisis" className={styles.urgent} aria-current={pathname === "/crisis" ? "page" : undefined} onClick={() => setOpen(false)}>
               <Heart size={16} aria-hidden="true" /> <span>Urgent help</span>
             </Link>
             <button
@@ -57,7 +60,7 @@ export default function Navbar() {
           </div>
           <div className={styles.mobileNav} id="mobile-nav" hidden={!open}>
             {navigation.map(({ href, label }) => (
-              <a key={href} href={href} onClick={() => setOpen(false)}>{label}</a>
+              <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined} onClick={() => setOpen(false)}>{label}</Link>
             ))}
           </div>
         </nav>

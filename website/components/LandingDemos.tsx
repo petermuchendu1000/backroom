@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { Clock, Ear, MessageCircle, Phone, Play, Square } from "lucide-react";
+import { useState } from "react";
+import { Clock, Ear, MessageCircle, Phone } from "lucide-react";
+import AnimatedArt from "./AnimatedArt";
 import styles from "@/app/landing.module.css";
 
 const steps = [
@@ -98,40 +98,13 @@ export function CallWalkthrough() {
 }
 
 export function VoiceMaskingDemo() {
-  const [playCount, setPlayCount] = useState(0);
-  const [playing, setPlaying] = useState(false);
-
-  useEffect(() => {
-    if (!playing) return;
-    const timer = window.setTimeout(() => setPlaying(false), 4800);
-    return () => window.clearTimeout(timer);
-  }, [playing, playCount]);
-
-  function togglePlayback() {
-    if (!playing) setPlayCount((count) => count + 1);
-    setPlaying(!playing);
-  }
-
-  const stillImage = "/ongero/voice-masking-still.webp";
-  const image = playing ? "/ongero/voice-masking.webp?play=" + playCount : stillImage;
-
   return (
     <figure className={styles.maskDemo}>
-      <Image
-        src={image}
-        alt="An illustration of two different waveforms on either side of translucent purple layers."
-        width={504}
-        height={312}
-        unoptimized
-        onError={() => setPlaying(false)}
+      <AnimatedArt
+        asset="voice-masking"
+        alt="Two different waveforms on either side of translucent purple layers."
       />
-      <figcaption>
-        <span>How voice masking looks</span>
-        <button type="button" onClick={togglePlayback} aria-label={playing ? "Stop voice masking animation" : "Play voice masking animation"}>
-          {playing ? <Square size={15} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
-          {playing ? "Stop" : "Play"}
-        </button>
-      </figcaption>
+      <figcaption>Illustration of voice masking</figcaption>
     </figure>
   );
 }

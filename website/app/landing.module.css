@@ -6,12 +6,17 @@
   --purple-dark: #512889;
   --line: #ded4e9;
   --serif: "Lora", Georgia, serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
   background: var(--paper);
   color: var(--ink);
   color-scheme: light;
   font-family: "Inter", system-ui, sans-serif;
 }
 
+.siteMain { flex: 1; }
+.siteMain:focus-visible { outline: none; }
 .landing ::selection { background: #dfc8f7; color: #29153c; }
 .landing :focus-visible { outline: 3px solid #a170d9; outline-offset: 4px; }
 .landing section[id] { scroll-margin-top: 98px; }
@@ -57,7 +62,7 @@
 .desktopNav, .navActions { display: flex; align-items: center; }
 .desktopNav { gap: clamp(18px, 3vw, 43px); }
 .desktopNav a, .mobileNav a { color: var(--muted); font-size: .91rem; font-weight: 550; }
-.desktopNav a:hover, .mobileNav a:hover { color: var(--purple-dark); }
+.desktopNav a[aria-current="page"], .mobileNav a[aria-current="page"], .desktopNav a:hover, .mobileNav a:hover { color: var(--purple-dark); }
 .navActions { gap: 8px; }
 .urgent, .menuButton {
   min-height: 44px;
@@ -75,7 +80,7 @@
   background: transparent;
   transition: background-color .2s ease;
 }
-.urgent:hover, .menuButton:hover { background: #efe5f8; }
+.urgent[aria-current="page"], .urgent:hover, .menuButton:hover { background: #efe5f8; }
 .menuButton, .mobileNav { display: none; }
 
 .hero { padding: clamp(42px, 5.2vw, 76px) 0 clamp(42px, 5.4vw, 78px); }
@@ -296,9 +301,7 @@
 .privacyList p { color: #d7c8e3; line-height: 1.56; font-size: .95rem; max-width: 40ch; }
 .maskDemo { border: 1px solid #6a4a83; border-radius: 22px; overflow: hidden; background: radial-gradient(ellipse, #4b2c66 0%, #342247 67%); }
 .maskDemo img { display: block; width: 100%; height: auto; }
-.maskDemo figcaption { min-height: 65px; padding: 9px 13px 9px 19px; border-top: 1px solid #654880; display: flex; gap: 10px; align-items: center; justify-content: space-between; color: #ebd9f5; font-weight: 550; font-size: .9rem; }
-.maskDemo button { min-height: 44px; display: inline-flex; gap: 7px; align-items: center; justify-content: center; padding: 7px 12px; border: 1px solid #ae88d2; border-radius: 999px; color: #f8efff; cursor: pointer; }
-.maskDemo button:hover { background: #5b3a76; }
+.maskDemo figcaption { min-height: 65px; padding: 9px 13px 9px 19px; border-top: 1px solid #654880; display: flex; align-items: center; color: #ebd9f5; font-weight: 550; font-size: .9rem; }
 
 .listen { padding: clamp(54px, 7.7vw, 105px) 0; }
 .listenGrid { display: grid; grid-template-columns: 1.04fr 1fr; align-items: center; gap: clamp(29px, 7vw, 92px); }
