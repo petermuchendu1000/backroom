@@ -1,18 +1,13 @@
-import type { Metadata } from "next";
-import { Inter, Lora } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-500.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-700.css";
+import "@fontsource/lora/latin-500.css";
+import "@fontsource/lora/latin-500-italic.css";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const lora = Lora({
-  subsets: ["latin"],
-  variable: "--font-lora",
-  display: "swap",
-});
+export const viewport: Viewport = { themeColor: "#0f0f12" };
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://backroom.llc"),
@@ -82,10 +77,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${lora.variable}`}>
-      <head>
-        <meta name="theme-color" content="#0F0F12" />
-      </head>
+    <html lang="en">
       <body className="antialiased bg-obsidian text-white font-sans noise-bg">
         <div className="relative z-10">{children}</div>
       </body>
