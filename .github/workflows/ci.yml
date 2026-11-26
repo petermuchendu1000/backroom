@@ -81,12 +81,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      # `npm test` is deliberately NOT run yet: this package contains zero
-      # tests, so jest exits 1 with "No tests found". Add this step in the same
-      # commit that adds the first *.spec.ts file.
-      #
-      # Do NOT paper over it with --passWithNoTests: that makes an empty suite
-      # indistinguishable from a passing one.
+      # Enabled with the first *.spec.ts, as the note here said it should be.
+      # Still no --passWithNoTests: an empty suite must stay distinguishable from a
+      # passing one, so jest exiting 1 on "No tests found" is the behaviour we want.
+      - name: Test
+        run: npm test
 
   android:
     name: app (Android unit tests)

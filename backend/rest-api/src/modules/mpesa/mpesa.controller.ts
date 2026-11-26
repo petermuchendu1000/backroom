@@ -11,6 +11,8 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { MpesaService, MpesaCallbackData } from './mpesa.service';
+import { CallbackOutcome, PaymentsService } from './payments.service';
+import { SubscriptionPlan } from '../../database/entities/payment.entity';
 import { InitiatePaymentDto, QueryPaymentDto } from './dto/mpesa.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -21,6 +23,7 @@ export class MpesaController {
 
   constructor(
     private readonly mpesaService: MpesaService,
+    private readonly paymentsService: PaymentsService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -47,6 +50,18 @@ export class MpesaController {
       amount,
       accountReference: `BKRM${userId?.slice(0, 6) || 'SUB'}`,
       transactionDesc: `Backroom ${dto.plan}`,
+    });
+
+    // Record the attempt before the prompt is answered. The callback carries nothing
+    // that identifies the payer except this CheckoutRequestID, so without this row it
+    // could not be attributed to anyone.
+    await this.paymentsService.recordPending({
+      userId,
+      checkoutRequestId: response.CheckoutRequestID,
+      merchantRequestId: response.MerchantRequestID ?? null,
+      plan: dto.plan as SubscriptionPlan,
+      amountKes: amount,
+      phoneNumber: dto.phoneNumber,
     });
 
     return {
@@ -86,28 +101,34 @@ export class MpesaController {
   @ApiOperation({ summary: 'M-Pesa callback webhook (Safaricom)' })
   @ApiResponse({ status: 200, description: 'Callback processed' })
   async handleCallback(@Body() data: MpesaCallbackData) {
-    this.logger.log('Received M-Pesa callback');
-
     const result = this.mpesaService.processCallback(data);
+    const outcome = await this.paymentsService.applyCallback(
+      result,
+      data as unknown as Record<string, unknown>,
+    );
 
-    if (result.success) {
-      // Payment successful - activate subscription
-      // TODO: Update user subscription in database
-      this.logger.log(
-        `Payment successful: CheckoutRequestID=${result.checkoutRequestId}, ` +
-          `Amount=${result.metadata?.Amount}, Phone=${result.metadata?.PhoneNumber}`,
-      );
-
-      // Here you would:
-      // 1. Look up the pending transaction by checkoutRequestId
-      // 2. Update the user's subscription status
-      // 3. Set subscription expiry date
-      // 4. Send push notification to user
-    } else {
-      // Payment failed or cancelled
-      this.logger.warn(
-        `Payment failed: ${result.resultDesc} (Code: ${result.resultCode})`,
-      );
+    switch (outcome) {
+      case CallbackOutcome.ACTIVATED:
+        this.logger.log(`Subscription activated for ${result.checkoutRequestId}`);
+        break;
+      case CallbackOutcome.ALREADY_APPLIED:
+        this.logger.log(`Duplicate callback for ${result.checkoutRequestId} — ignored`);
+        break;
+      case CallbackOutcome.UNKNOWN_CHECKOUT:
+        // Either a stale retry or someone POSTing at a public endpoint. Neither grants
+        // anything, and we still answer 200 so Safaricom stops retrying.
+        this.logger.warn(`Callback for unknown ${result.checkoutRequestId} — ignored`);
+        break;
+      case CallbackOutcome.AMOUNT_MISMATCH:
+        this.logger.error(
+          `Amount mismatch for ${result.checkoutRequestId} — not activated`,
+        );
+        break;
+      case CallbackOutcome.PAYMENT_FAILED:
+        this.logger.warn(
+          `Payment failed for ${result.checkoutRequestId}: ${result.resultDesc}`,
+        );
+        break;
     }
 
     // Safaricom expects a specific response format

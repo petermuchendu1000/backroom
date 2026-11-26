@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsNotEmpty, Min } from 'class-validator';
+import { IsIn, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class InitiatePaymentDto {
@@ -15,8 +15,11 @@ export class InitiatePaymentDto {
     example: 'monthly',
     enum: ['monthly', 'yearly'],
   })
+  // Without this, any string reached the controller and anything that was not
+  // 'yearly' was silently charged the monthly price, then stored as the plan.
   @IsString()
   @IsNotEmpty()
+  @IsIn(['monthly', 'yearly'])
   plan: 'monthly' | 'yearly';
 }
 
