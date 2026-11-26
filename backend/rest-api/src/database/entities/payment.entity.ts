@@ -47,7 +47,8 @@ export class Payment {
   @Column({ name: 'checkout_request_id', unique: true })
   checkoutRequestId: string;
 
-  @Column({ name: 'merchant_request_id', nullable: true })
+  // Explicit type: TypeORM reflects `string | null` as Object and cannot map it.
+  @Column({ name: 'merchant_request_id', type: 'text', nullable: true })
   merchantRequestId: string | null;
 
   @Column({ type: 'text' })

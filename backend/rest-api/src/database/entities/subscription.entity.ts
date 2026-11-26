@@ -44,7 +44,8 @@ export class Subscription {
   @Column({ name: 'provider_subscription_id' })
   providerSubscriptionId: string;
 
-  @Column({ name: 'provider_customer_id', nullable: true })
+  // Explicit type, as above.
+  @Column({ name: 'provider_customer_id', type: 'text', nullable: true })
   providerCustomerId: string | null;
 
   @Column({ type: 'enum', enum: SubscriptionTier })

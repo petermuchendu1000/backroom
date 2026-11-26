@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // Config
 import configuration from './config/configuration';
@@ -25,6 +26,9 @@ import { HealthModule } from './modules/health/health.module';
       isGlobal: true,
       load: [configuration],
     }),
+
+    // Timers (the subscription lapse sweep)
+    ScheduleModule.forRoot(),
 
     // Database
     TypeOrmModule.forRootAsync({
