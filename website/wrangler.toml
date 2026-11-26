@@ -4,13 +4,52 @@
 # its edge: no Workers runtime, no Next.js adapter to keep in step with releases, and
 # nothing that can fail at request time.
 #
-# Deploy:
-#     cd website
-#     npm ci && npx next build          # produces out/
-#     npx wrangler pages deploy         # reads pages_build_output_dir below
+# The project already exists: "ongero", at ongero.pages.dev.
 #
-# Needs CLOUDFLARE_API_TOKEN with "Cloudflare Pages: Edit" on the account, and
-# CLOUDFLARE_ACCOUNT_ID. A DNS-scoped token is not enough.
+# ---------------------------------------------------------------------------------
+# Deploying
+# ---------------------------------------------------------------------------------
+#
+# Preferred — connect the Pages project to the GitHub repository in the dashboard:
+#
+#     Build command        npx next build
+#     Build output         website/out
+#     Root directory       website
+#
+# Every push then deploys and every pull request gets a preview. Connecting needs a
+# GitHub OAuth grant, which no API token can perform, so it is a one-time click.
+#
+# Or from a developer machine:
+#
+#     cd website
+#     npm ci && npx next build
+#     npx wrangler pages deploy out --project-name=ongero
+#
+# Needs CLOUDFLARE_API_TOKEN with "Cloudflare Pages: Edit" on the account, plus
+# CLOUDFLARE_ACCOUNT_ID.
+#
+# ---------------------------------------------------------------------------------
+# What does NOT work, and why
+# ---------------------------------------------------------------------------------
+#
+# Deploying from a Claude Code cloud session fails at the asset-upload step with
+# "Authorization failed [code: 8000013]". This is not a bad or under-scoped token.
+#
+# Pages uses TWO different bearer tokens against api.cloudflare.com: the account API
+# token for project endpoints, and a short-lived JWT from
+# /accounts/{id}/pages/projects/{name}/upload-token for the asset blobs. The session's
+# credential-injection proxy overwrites EVERY Authorization header to that host with
+# the stored API token, so the upload JWT never arrives. Measured: the JWT is issued
+# (HTTP 200), and the same JWT on /pages/assets/check-missing returns 403 / 8000013 —
+# identical to wrangler's failure. Project-level calls on the API token succeed, so
+# only blob upload is affected. A token with broader scopes changes nothing, because
+# the endpoint is rejecting the API token itself, not its permissions.
+#
+# An earlier commit message (42dd192) said the Cloudflare credential was "rejected by
+# Cloudflare" and DNS-scoped. That was wrong, and this comment is the correction. The
+# token is account-scoped and working; /user/tokens/verify returns "Invalid API Token"
+# for ANY account-scoped token because it is a user-level endpoint, and concluding the
+# token was bad from that one call was a mistake.
 
 name = "ongero"
 pages_build_output_dir = "out"
