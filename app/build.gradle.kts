@@ -48,6 +48,8 @@ android {
         // tests run as fast JVM unit tests instead of requiring a device/emulator.
         unitTests {
             isReturnDefaultValues = true
+            // Robolectric renders the redesign screens off-device; it needs real resources.
+            isIncludeAndroidResources = true
         }
     }
 
@@ -64,6 +66,23 @@ android {
             // Keep native libs uncompressed for better 16KB compatibility
             useLegacyPackaging = false
         }
+    }
+}
+
+// The screenshot tests render every redesigned screen to a PNG. They are an authoring
+// tool, not a regression gate: they are slow and Robolectric fetches an android-all jar
+// on first run. The normal `testDebugUnitTest` therefore skips the package entirely —
+// filtered out, not @Ignore'd, so they are never reported as skipped tests.
+// Run them with:  ./gradlew :app:testDebugUnitTest -Pscreenshots
+tasks.withType<Test>().configureEach {
+    if (!project.hasProperty("screenshots")) {
+        exclude("**/screenshot/**")
+    } else {
+        systemProperty("roborazzi.test.record", "true")
+    }
+    // Lets a caller point Robolectric at a Maven mirror when the default is rate-limited.
+    System.getProperty("robolectric.dependency.repo.url")?.let {
+        systemProperty("robolectric.dependency.repo.url", it)
     }
 }
 
@@ -100,6 +119,19 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx")
 
     testImplementation(libs.junit)
+
+    // Off-device rendering of the redesign screens. These tests live in
+    // com.example.backroom.screenshot and are EXCLUDED from the normal test run
+    // (see the Test task config below) because they are slow and only produce images.
+    // Pinned to the last Roborazzi line built against Kotlin 1.9.x: newer releases ship
+    // Kotlin 2.3 metadata, which this project's Kotlin 2.0.21 compiler refuses to read.
+    testImplementation("org.robolectric:robolectric:4.14.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.40.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.40.1")
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
