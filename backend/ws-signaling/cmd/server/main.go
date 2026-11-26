@@ -110,7 +110,9 @@ func loadConfig() *Config {
 	return &Config{
 		Port:       getEnv("WS_PORT", "8443"),
 		RedisURL:   getEnv("REDIS_URL", "redis://localhost:6379"),
-		JWTSecret:  getEnv("JWT_SECRET", "dev_jwt_secret_backroom_2026_change_in_production"),
+		// MUST match the REST API's default (src/config/configuration.ts) and both
+		// docker-compose services: that service mints the tokens this one verifies.
+		JWTSecret:  getEnv("JWT_SECRET", "dev_jwt_secret_change_me_in_production"),
 		TurnURL:    getEnv("TURN_URL", "turn:192.168.1.160:3478"),
 		TurnSecret: getEnv("TURN_SECRET", "backroom_turn_secret"),
 	}

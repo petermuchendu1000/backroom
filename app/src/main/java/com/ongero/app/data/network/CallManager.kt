@@ -2,6 +2,10 @@ package com.ongero.app.data.network
 
 import android.content.Context
 import android.util.Log
+import com.ongero.app.data.api.ApiClient
+import com.ongero.app.data.api.ApiResult
+import com.ongero.app.data.api.SessionManager
+import com.ongero.app.data.api.SharedPrefsTokenStore
 import com.ongero.app.data.webrtc.WebRTCManager
 import com.ongero.app.data.webrtc.WebRTCState
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -67,10 +71,39 @@ object CallManager {
     // Application context
     private var appContext: Context? = null
 
-    // User ID (anonymous, device-based) - set by initialize()
+    // User ID - set by initialize().
+    //
+    // This is the SERVER's users.id once we have authenticated, not a value the app
+    // invents. The signalling server takes identity from the JWT subject and ignores
+    // the userId in our register payload entirely (hub.go: handleRegister reads only
+    // `role`), so a locally generated UUID was never the identity anyone else used.
+    // A device-local UUID is kept only as a placeholder before the first successful
+    // authentication, so nothing throws while that is in flight.
     private var _userId: String? = null
     val userId: String
         get() = _userId ?: throw IllegalStateException("CallManager.userId accessed before initialize() was called")
+
+    /** Obtains and refreshes the bearer token the WebSocket handshake needs. */
+    private var session: SessionManager? = null
+
+    /**
+     * Replace the placeholder id with the one the server uses for us.
+     *
+     * Called from two places that can disagree about timing but not about the value:
+     * the token provider, as soon as authentication succeeds, and the `connected`
+     * frame, which is the server stating it outright. Idempotent, and it persists the
+     * id so a later launch starts from the right one.
+     */
+    private fun adoptServerUserId(serverId: String) {
+        if (serverId.isBlank() || serverId == _userId) return
+        Log.i(TAG, "   Identity: $_userId -> $serverId (from the server)")
+        _userId = serverId
+        appContext
+            ?.getSharedPreferences("ongero_prefs", Context.MODE_PRIVATE)
+            ?.edit()
+            ?.putString("anonymous_user_id", serverId)
+            ?.apply()
+    }
 
     // Current role
     private val _currentRole = MutableStateFlow<String?>(null)
@@ -209,6 +242,27 @@ object CallManager {
             newId
         }
         Log.d(TAG, "   📱 Final User ID: $_userId")
+
+        // The signalling server rejects an unauthenticated upgrade with 401 before a
+        // socket exists, so the connection cannot be opened until there is a token to
+        // put on it. SessionManager owns getting and refreshing one.
+        val sessionManager = SessionManager(ApiClient(), SharedPrefsTokenStore(appContext!!))
+        session = sessionManager
+        signalingClient.tokenProvider = { forceRefresh ->
+            when (val result = sessionManager.accessToken(forceRefresh)) {
+                is ApiResult.Ok -> {
+                    // The server's id for us, which is what it will address us by.
+                    // Adopted here rather than left as the local placeholder.
+                    sessionManager.serverUserId?.let { adoptServerUserId(it) }
+                    result.value
+                }
+
+                is ApiResult.Err -> {
+                    Log.w(TAG, "   Could not authenticate for signalling: ${result.failure}")
+                    null
+                }
+            }
+        }
 
         // Connect to signaling server
         Log.d(TAG, "   🔌 Connecting to signaling server...")
@@ -597,6 +651,10 @@ object CallManager {
         when (message) {
             is SignalingMessage.Connected -> {
                 Log.d(TAG, "🔗 Connected with client ID: ${message.clientId}")
+                // The server states who it thinks we are. That is the id every other
+                // client and every routed message will use, so it wins over anything
+                // held locally.
+                adoptServerUserId(message.clientId)
             }
 
             is SignalingMessage.ShareSubmitted -> {

@@ -104,7 +104,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-backroom}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_in_production}
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_me_in_production}
       - TURN_URL=turn:coturn:3478
       - STUN_URL=stun:coturn:3478
       - TURN_LONG_TERM_SECRET=${TURN_LONG_TERM_SECRET:-CHANGE_ME_IN_PRODUCTION_USE_STRONG_SECRET}
@@ -137,7 +137,7 @@ services:
     environment:
       - WS_PORT=8443
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_backroom_2026_change_in_production}
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_change_me_in_production}
       # Use external IP for TURN so phones can connect (not Docker internal hostname)
       - TURN_URL=${TURN_URL:-turn:192.168.1.160:3478}
       - TURN_SECRET=${TURN_SECRET:-backroom_turn_secret}

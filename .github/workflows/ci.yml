@@ -10,6 +10,19 @@ permissions:
   contents: read
 
 jobs:
+  # The REST API mints the JWT the signalling service verifies. When their default
+  # secrets differ, every token is valid and every WebSocket upgrade is still refused
+  # with 401, with nothing in either service's logs to explain it. This repository
+  # shipped three different defaults at once; a cross-language constant needs a
+  # mechanism, not a comment.
+  shared-config:
+    name: shared config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert both services default to the same JWT secret
+        run: python3 .github/scripts/assert_shared_jwt_default.py
+
   ws-signaling:
     name: ws-signaling (Go)
     runs-on: ubuntu-latest
@@ -148,7 +161,7 @@ jobs:
       # ExampleUnitTest + 10 in VoiceAnonymizationTest + 3 in RedesignWireMappingTest.
       # Raise it in the same commit that adds tests.
       - name: Assert the unit tests actually ran
-        run: python3 .github/scripts/assert_junit_results.py app/build/test-results/testDebugUnitTest 45
+        run: python3 .github/scripts/assert_junit_results.py app/build/test-results/testDebugUnitTest 52
 
       - name: Upload test report on failure
         if: failure()

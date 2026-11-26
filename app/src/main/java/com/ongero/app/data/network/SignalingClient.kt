@@ -105,6 +105,22 @@ class SignalingClient {
     private val maxReconnectDelayMs = 30_000L
 
     /**
+     * Supplies the bearer token for the handshake.
+     *
+     * The signalling server refuses the upgrade with 401 before a socket exists
+     * (websocket.go: no token presented), so there is nothing to retry after the
+     * fact — the credential has to be in hand before the request is built.
+     *
+     * The Boolean asks for a token that is definitely not the one just rejected.
+     * Set by CallManager.initialize(); null until then, and a connection attempted
+     * without it is abandoned rather than sent to be refused.
+     */
+    var tokenProvider: (suspend (forceRefresh: Boolean) -> String?)? = null
+
+    /** Set when the server rejects our credential, cleared once a new one is used. */
+    private var tokenWasRejected = false
+
+    /**
      * Connect to the signaling server
      */
     fun connect() {
@@ -126,11 +142,46 @@ class SignalingClient {
         Log.d(TAG, "   ✓ Reset reconnectAttempts to 0")
 
         _connectionState.value = ConnectionState.CONNECTING
+        scope.launch { openSocket() }
+    }
+
+    /**
+     * Build and send the handshake, with the token on it.
+     *
+     * Separate from [connect] because reconnection must come through here and NOT
+     * through connect(), which resets reconnectAttempts. Routing retries back through
+     * connect() zeroed the counter on every attempt, so the exponential backoff never
+     * grew past its first step and the app retried once a second, forever, against a
+     * server that was refusing every one of them.
+     */
+    private suspend fun openSocket() {
+        val provider = tokenProvider
+        if (provider == null) {
+            Log.e(TAG, "No token provider set — CallManager.initialize() must run first")
+            _connectionState.value = ConnectionState.DISCONNECTED
+            return
+        }
+
+        val token = provider(tokenWasRejected)
+        tokenWasRejected = false
+        if (token.isNullOrBlank()) {
+            // Authentication failed, probably because we are offline. Sending the
+            // handshake anyway would just collect a 401 and look like a server fault.
+            Log.w(TAG, "No token available; not attempting the handshake")
+            _connectionState.value = ConnectionState.DISCONNECTED
+            attemptReconnect()
+            return
+        }
+
         val url = NetworkConfig.WS_SIGNALING_URL
         Log.d(TAG, "   🌐 URL: $url")
 
+        // The header, not a ?token= query parameter. Both are accepted by the server
+        // (websocket.go reads the query first, then this header), but a URL is the
+        // thing that ends up in proxy logs and crash reports.
         val request = Request.Builder()
             .url(url)
+            .header("Authorization", "Bearer $token")
             .build()
 
         Log.d(TAG, "   Creating WebSocket connection...")
@@ -166,6 +217,13 @@ class SignalingClient {
                 Log.e(TAG, "   Error: ${t.message}")
                 Log.e(TAG, "   Response: ${response?.code} ${response?.message}")
                 Log.e(TAG, "═══════════════════════════════════════════════════", t)
+                // 401 means the credential was refused, not that the network failed.
+                // Reconnecting with the same token would be refused identically, so
+                // the next attempt asks for a fresh one.
+                if (response?.code == 401) {
+                    Log.w(TAG, "   Token rejected — will re-authenticate before retrying")
+                    tokenWasRejected = true
+                }
                 _connectionState.value = ConnectionState.DISCONNECTED
                 attemptReconnect()
             }
@@ -481,7 +539,7 @@ class SignalingClient {
             val delayMs = (1000L * (1 shl (reconnectAttempts - 1).coerceAtMost(4))).coerceAtMost(maxReconnectDelayMs)
             Log.d(TAG, "Reconnecting in ${delayMs}ms (attempt $reconnectAttempts)")
             delay(delayMs)
-            connect()
+            openSocket()
         }
     }
 }

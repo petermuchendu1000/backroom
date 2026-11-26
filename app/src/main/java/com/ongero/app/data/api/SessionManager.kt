@@ -21,7 +21,7 @@ interface TokenStore {
     var serverUserId: String?
 }
 
-class SharedPrefsTokenStore(context: Context) : TokenStore {
+class SharedPrefsTokenStore(private val context: Context) : TokenStore {
     private val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     /**
@@ -34,9 +34,23 @@ class SharedPrefsTokenStore(context: Context) : TokenStore {
      * the right lifetime for an anonymous account.
      */
     override val deviceId: String
-        get() = prefs.getString(KEY_DEVICE_ID, null) ?: UUID.randomUUID().toString().also {
-            prefs.edit().putString(KEY_DEVICE_ID, it).apply()
-        }
+        get() = prefs.getString(KEY_DEVICE_ID, null) ?: adopt(legacyId() ?: UUID.randomUUID().toString())
+
+    private fun adopt(id: String): String {
+        prefs.edit().putString(KEY_DEVICE_ID, id).apply()
+        return id
+    }
+
+    /**
+     * The UUID CallManager used to generate for itself, before any of this existed.
+     *
+     * Reused as the device id on an install that predates the session layer, so that
+     * install keeps one server-side account instead of silently becoming a second
+     * user — and anything already bought under it stays bought.
+     */
+    private fun legacyId(): String? = context.applicationContext
+        .getSharedPreferences("ongero_prefs", Context.MODE_PRIVATE)
+        .getString("anonymous_user_id", null)
 
     override var accessToken: String?
         get() = prefs.getString(KEY_TOKEN, null)
@@ -88,6 +102,17 @@ class SessionManager(
 
     /** The server's id for this install, once authenticated. Null before that. */
     val serverUserId: String? get() = store.serverUserId
+
+    /**
+     * A bearer token, for callers that cannot wrap their work in [withToken].
+     *
+     * The WebSocket is the reason this exists: its credential goes on the handshake,
+     * so there is no request to retry — a rejected token has to be replaced before the
+     * next connection attempt rather than after a failed call. Pass forceRefresh=true
+     * when the server has just rejected the one we had.
+     */
+    suspend fun accessToken(forceRefresh: Boolean = false): ApiResult<String> =
+        token(forceRefresh)
 
     /**
      * Run [call] with a valid bearer token, authenticating first if needed and once

@@ -6,7 +6,8 @@
     <color name="ongero_purple_dark">#FF5039B8</color>
 
     <!-- Launcher Icon Background -->
-    <color name="ic_launcher_background">#FFFFFFFF</color>
+    <!-- The design system's paper, so the icon sits on the same warm ground as the app. -->
+    <color name="ic_launcher_background">#FFF7F4F0</color>
 
     <!-- Legacy colors -->
     <color name="black">#FF000000</color>

@@ -21,7 +21,13 @@ export default () => ({
 
   // JWT
   jwt: {
-    secret: process.env.JWT_SECRET || 'CHANGE_ME_IN_PRODUCTION',
+    // MUST match the signalling service's default (ws-signaling cmd/server/main.go)
+    // and both docker-compose services. The REST API mints the token; the Go
+    // signalling service verifies it. Three different defaults used to live in
+    // this repo, so `docker compose up` with no .env produced tokens that every
+    // WebSocket upgrade rejected with 401.
+    // .github/scripts/assert_shared_jwt_default.py keeps them in step.
+    secret: process.env.JWT_SECRET || 'dev_jwt_secret_change_me_in_production',
     expiresIn: process.env.JWT_EXPIRES_IN || '15m',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
