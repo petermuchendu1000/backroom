@@ -63,11 +63,13 @@ object NetworkConfig {
 
     // ============================================
     // TURN CREDENTIALS
-    // In production, these should come from the server
     // ============================================
-
-    const val TURN_USERNAME = "ongero"
-    const val TURN_CREDENTIAL = "ongero_turn_secret"
+    //
+    // There are none here, deliberately. coturn runs in use-auth-secret mode and the
+    // signalling server mints a short-lived credential per peer, delivered on the
+    // matchMade message (SignalingClient.TurnServer). A username and password
+    // compiled into the APK would be extractable by anyone who installs it, would
+    // never expire, and would be the same for every user.
 
     // ============================================
     // TIMEOUTS
@@ -76,21 +78,6 @@ object NetworkConfig {
     const val WS_CONNECT_TIMEOUT_MS = 10_000L
     const val WS_READ_TIMEOUT_MS = 30_000L
     const val API_TIMEOUT_MS = 30_000L
-
-    // ============================================
-    // ICE SERVERS FOR WEBRTC
-    // ============================================
-
-    fun getIceServers(): List<IceServer> {
-        return listOf(
-            IceServer(urls = listOf(STUN_URL)),
-            IceServer(
-                urls = listOf(TURN_URL),
-                username = TURN_USERNAME,
-                credential = TURN_CREDENTIAL
-            )
-        )
-    }
 
     /**
      * For debugging - print current configuration
@@ -104,13 +91,4 @@ object NetworkConfig {
         """.trimIndent()
     }
 }
-
-/**
- * ICE Server configuration for WebRTC
- */
-data class IceServer(
-    val urls: List<String>,
-    val username: String? = null,
-    val credential: String? = null
-)
 

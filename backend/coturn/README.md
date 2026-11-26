@@ -24,19 +24,34 @@ The main config is in `turnserver.conf`. Key settings:
 
 ### Authentication
 
-Two modes are supported:
+One mode: time-limited credentials, in every environment.
 
-1. **Static credentials** (development):
-   ```
-   user=backroom:backroom_turn_secret
-   ```
+```
+use-auth-secret
+```
 
-2. **Time-limited credentials** (production - recommended):
-   ```
-   use-auth-secret
-   static-auth-secret=YOUR_SECRET
-   ```
-   The signaling server generates temporary credentials using HMAC.
+The secret is **not** in `turnserver.conf`. It is passed at startup, so nothing is
+published:
+
+```bash
+turnserver -c turnserver.conf --static-auth-secret="$TURN_STATIC_AUTH_SECRET"
+```
+
+`docker-compose.yml` does this, and refuses to start if `TURN_STATIC_AUTH_SECRET` is
+unset rather than falling back to a default that, being committed, would let anyone
+who reads this repository relay their traffic through your server.
+
+There used to be a static `user=backroom:backroom_turn_secret` here as well, described
+as a development fallback. It was not one. Verified against coturn 4.6.1: with
+`use-auth-secret` enabled, static user entries are ignored entirely, so that
+credential — which the signalling server was sending to every client on every match —
+was rejected on every attempt. Relayed calls could not work.
+
+The same secret must reach three places: coturn, the REST API
+(`TURN_STATIC_AUTH_SECRET`) and the signalling service (same variable). All three
+compute the same HMAC. `.github/scripts/assert_shared_turn_secret.py` fails CI if they
+drift, and `test/turn-auth.check.sh` proves against a real coturn that what we mint is
+accepted.
 
 ### Generating Ephemeral Credentials
 
@@ -48,7 +63,7 @@ const crypto = require('crypto');
 
 function generateTurnCredentials(secret, ttlSeconds = 3600) {
   const timestamp = Math.floor(Date.now() / 1000) + ttlSeconds;
-  const username = `${timestamp}:backroom`;
+  const username = `${timestamp}:${userId}`;  // the account, so a relay can be traced
   const hmac = crypto.createHmac('sha1', secret);
   hmac.update(username);
   const credential = hmac.digest('base64');
@@ -70,7 +85,7 @@ function generateTurnCredentials(secret, ttlSeconds = 3600) {
 // Go example
 func generateTurnCredentials(secret string, ttlSeconds int64) (string, string) {
     timestamp := time.Now().Unix() + ttlSeconds
-    username := fmt.Sprintf("%d:backroom", timestamp)
+    username := fmt.Sprintf("%d:%s", timestamp, userID)
     
     h := hmac.New(sha1.New, []byte(secret))
     h.Write([]byte(username))
@@ -100,19 +115,27 @@ docker exec ongero-coturn turnadmin -l
 1. Go to https://webrtc.github.io/samples/src/content/peerconnection/trickle-ice/
 2. Add your TURN server:
    - URL: `turn:localhost:3478`
-   - Username: `backroom`
-   - Credential: `backroom_turn_secret`
+   - Username and credential: mint a pair first, they expire —
+     `go run ./cmd/turn-credential -user debug` from `backend/ws-signaling`
 3. Click "Gather candidates"
 4. You should see `relay` candidates (indicates TURN is working)
 
 ### Command Line Test
 
 ```bash
-# Test STUN
-turnutils_uclient -t -u backroom -w backroom_turn_secret localhost
+# Mint a credential with the same code the signalling server uses
+cd backend/ws-signaling
+eval "$(go run ./cmd/turn-credential -user debug -format shell |
+        { read u; read c; printf 'U=%q C=%q' "$u" "$c"; })"
 
-# Test with verbose output
-turnutils_uclient -t -u backroom -w backroom_turn_secret -v localhost
+turnutils_uclient -t -u "$U" -w "$C" localhost
+turnutils_uclient -t -u "$U" -w "$C" -v localhost
+```
+
+Or run the whole thing, including the cases that must be refused:
+
+```bash
+backend/coturn/test/turn-auth.check.sh
 ```
 
 ## Production Considerations

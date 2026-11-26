@@ -36,7 +36,11 @@ export default () => ({
   turn: {
     url: process.env.TURN_URL || 'turn:localhost:3478',
     stunUrl: process.env.STUN_URL || 'stun:localhost:3478',
-    secret: process.env.TURN_LONG_TERM_SECRET || 'CHANGE_ME_coturn_static_auth_secret',
+    // coturn's static-auth-secret. The SAME value must reach coturn itself and the
+    // signalling service — three components computing one HMAC. No default: a
+    // committed TURN secret is an open relay, so unset means no TURN is offered.
+    // .github/scripts/assert_shared_turn_secret.py keeps the three in step.
+    secret: process.env.TURN_STATIC_AUTH_SECRET || '',
     ttl: parseInt(process.env.TURN_CREDENTIAL_TTL ?? '3600', 10),
   },
 

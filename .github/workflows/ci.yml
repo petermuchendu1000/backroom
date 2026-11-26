@@ -23,6 +23,13 @@ jobs:
       - name: Assert both services default to the same JWT secret
         run: python3 .github/scripts/assert_shared_jwt_default.py
 
+      # Same shape of bug, different secret: coturn, the REST API and the signalling
+      # service all compute one HMAC, and a mismatch means every relayed call fails
+      # with nothing in any log to say why. This also refuses a TURN secret committed
+      # to turnserver.conf, which would be an open relay.
+      - name: Assert one TURN secret, and none committed
+        run: python3 .github/scripts/assert_shared_turn_secret.py
+
   ws-signaling:
     name: ws-signaling (Go)
     runs-on: ubuntu-latest
