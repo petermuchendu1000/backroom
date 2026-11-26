@@ -1,55 +1,58 @@
 # Cloudflare Pages project for the Ongero marketing site.
 #
+# LIVE at https://ongero.com and https://www.ongero.com
+#
 # The site is a static export (see next.config.ts), so Pages serves plain files from
 # its edge: no Workers runtime, no Next.js adapter to keep in step with releases, and
 # nothing that can fail at request time.
 #
-# The project already exists: "ongero", at ongero.pages.dev.
+# ---------------------------------------------------------------------------------
+# Where it lives
+# ---------------------------------------------------------------------------------
+#
+#   project    ongero            ongero-dc6.pages.dev
+#   account    2085de7e8387e3898880124890f63826   (Mitasafi89@gmail.com's Account)
+#   zone       ongero.com, active, on Cloudflare nameservers
+#
+# ongero.com and www.ongero.com are proxied CNAMEs to ongero-dc6.pages.dev. They
+# replaced a Namecheap parking page.
+#
+# DO NOT touch the zone's MX or TXT records. Five MX entries point at Namecheap email
+# forwarding and the TXT is its SPF record; they are live mail, not site config, and a
+# deploy has no business changing them.
 #
 # ---------------------------------------------------------------------------------
 # Deploying
 # ---------------------------------------------------------------------------------
 #
-# Preferred — connect the Pages project to the GitHub repository in the dashboard:
-#
-#     Build command        npx next build
-#     Build output         website/out
-#     Root directory       website
-#
-# Every push then deploys and every pull request gets a preview. Connecting needs a
-# GitHub OAuth grant, which no API token can perform, so it is a one-time click.
-#
-# Or from a developer machine:
-#
 #     cd website
 #     npm ci && npx next build
-#     npx wrangler pages deploy out --project-name=ongero
+#     CLOUDFLARE_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... \
+#       npx wrangler pages deploy out --project-name=ongero
 #
-# Needs CLOUDFLARE_API_TOKEN with "Cloudflare Pages: Edit" on the account, plus
-# CLOUDFLARE_ACCOUNT_ID.
+# The token needs "Cloudflare Pages: Edit" on the account.
+#
+# Worth doing once: connect the project to this GitHub repository in the dashboard
+# (build `npx next build`, output `website/out`, root `website`). Every push then
+# deploys and every pull request gets a preview. It needs a GitHub OAuth grant, which
+# no API token can perform.
 #
 # ---------------------------------------------------------------------------------
-# What does NOT work, and why
+# Deploying from a Claude Code cloud session
 # ---------------------------------------------------------------------------------
 #
-# Deploying from a Claude Code cloud session fails at the asset-upload step with
-# "Authorization failed [code: 8000013]". This is not a bad or under-scoped token.
+# Works, but ONLY with no api.cloudflare.com entry in the session environment's
+# network secrets.
 #
-# Pages uses TWO different bearer tokens against api.cloudflare.com: the account API
-# token for project endpoints, and a short-lived JWT from
-# /accounts/{id}/pages/projects/{name}/upload-token for the asset blobs. The session's
-# credential-injection proxy overwrites EVERY Authorization header to that host with
-# the stored API token, so the upload JWT never arrives. Measured: the JWT is issued
-# (HTTP 200), and the same JWT on /pages/assets/check-missing returns 403 / 8000013 —
-# identical to wrangler's failure. Project-level calls on the API token succeed, so
-# only blob upload is affected. A token with broader scopes changes nothing, because
-# the endpoint is rejecting the API token itself, not its permissions.
+# With one present the session proxy REPLACES the Authorization header on every
+# request to that host. Measured: a deliberately invalid token still returned 200 with
+# the real account. Pages uses two different bearers against that one host — the
+# account API token for project endpoints, and a short-lived JWT from
+# .../pages/projects/{name}/upload-token for the asset blobs — so the JWT was being
+# swapped out and the upload refused with 403 / 8000013. Neither the token nor its
+# scopes were ever at fault, despite three of my own reports saying otherwise.
 #
-# An earlier commit message (42dd192) said the Cloudflare credential was "rejected by
-# Cloudflare" and DNS-scoped. That was wrong, and this comment is the correction. The
-# token is account-scoped and working; /user/tokens/verify returns "Invalid API Token"
-# for ANY account-scoped token because it is a user-level endpoint, and concluding the
-# token was bad from that one call was a mistake.
+# Remove that secret and the header passes through; wrangler then behaves normally.
 
 name = "ongero"
 pages_build_output_dir = "out"
