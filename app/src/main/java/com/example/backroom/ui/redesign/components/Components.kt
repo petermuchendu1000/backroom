@@ -7,6 +7,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -166,4 +174,99 @@ fun GuaranteeRow(text: String, icon: @Composable () -> Unit) {
             Text(text, style = MaterialTheme.typography.bodyMedium, color = backroomColors.ink)
         }
     }
+}
+
+/** Back arrow plus the screen's name. Used by the screens that are not the main flow. */
+@Composable
+fun ScreenHeader(title: String, onBack: () -> Unit) {
+    val c = backroomColors
+    Column {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.size(40.dp),
+        ) {
+            Icon(
+                Icons.AutoMirrored.Outlined.ArrowBack,
+                contentDescription = "Back",
+                tint = c.muted,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+        Box(Modifier.height(16.dp))
+        Text(title, style = MaterialTheme.typography.headlineMedium, color = c.ink)
+    }
+}
+
+/** A tappable row: name on the left, current value and a chevron on the right. */
+@Composable
+fun SettingRow(
+    title: String,
+    onClick: () -> Unit,
+    value: String? = null,
+    destructive: Boolean = false,
+) {
+    val c = backroomColors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = if (destructive) c.danger else c.ink,
+            modifier = Modifier.weight(1f),
+        )
+        if (value != null) {
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = c.muted)
+        }
+        Icon(
+            Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+            contentDescription = null,
+            tint = c.muted,
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+/** A row whose whole point is the switch, so it carries no explanatory line. */
+@Composable
+fun ToggleRow(title: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val c = backroomColors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyLarge,
+            color = c.ink,
+            modifier = Modifier.weight(1f),
+        )
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = c.accent,
+                checkedThumbColor = c.onAccent,
+            ),
+        )
+    }
+}
+
+/** A quiet label that separates groups without shouting in capitals. */
+@Composable
+fun GroupLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = backroomColors.muted,
+        modifier = Modifier.padding(top = 28.dp, bottom = 6.dp),
+    )
 }

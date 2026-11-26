@@ -17,6 +17,8 @@ import com.example.backroom.BuildConfig
 import com.example.backroom.ui.redesign.flow.RedesignHome
 import com.example.backroom.ui.redesign.flow.RedesignInCall
 import com.example.backroom.ui.redesign.flow.RedesignOnboarding
+import com.example.backroom.ui.redesign.flow.RedesignHelp
+import com.example.backroom.ui.redesign.flow.RedesignSettings
 import com.example.backroom.ui.redesign.flow.RedesignSharerFlow
 import com.example.backroom.ui.redesign.screens.AfterCallScreen
 import com.example.backroom.ui.redesign.screens.CallFeeling
@@ -354,6 +356,18 @@ fun BackroomNavGraph(
         // ============================================
 
         composable(Screen.Settings.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme {
+                    RedesignSettings(
+                        preferencesManager = preferencesManager,
+                        onBack = { navController.popBackStack() },
+                        onBoundaries = { navController.navigate(Screen.Boundaries.route) },
+                        onBlockedUsers = { navController.navigate(Screen.BlockedUsers.route) },
+                        onSubscription = { navController.navigate(Screen.Subscription.route) },
+                    )
+                }
+                return@composable
+            }
             SettingsScreen(
                 preferencesManager = preferencesManager,
                 onBack = { navController.popBackStack() },
@@ -391,6 +405,10 @@ fun BackroomNavGraph(
         // ============================================
 
         composable(Screen.Help.route) {
+            if (BuildConfig.REDESIGN_UI) {
+                RedesignTheme { RedesignHelp(onBack = { navController.popBackStack() }) }
+                return@composable
+            }
             HelpResourcesScreen(
                 onBack = { navController.popBackStack() }
             )

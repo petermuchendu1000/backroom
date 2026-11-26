@@ -5,13 +5,17 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.example.backroom.ui.redesign.screens.AfterCallScreen
 import com.example.backroom.ui.redesign.screens.AskScreen
+import com.example.backroom.ui.redesign.screens.HelpScreen
 import com.example.backroom.ui.redesign.screens.HomeMode
 import com.example.backroom.ui.redesign.screens.HomeScreen
 import com.example.backroom.ui.redesign.screens.InCallScreen
 import com.example.backroom.ui.redesign.screens.LeavingCallScreen
 import com.example.backroom.ui.redesign.screens.MicPermissionScreen
 import com.example.backroom.ui.redesign.screens.WaitingScreen
+import com.example.backroom.ui.redesign.screens.SettingsScreen
 import com.example.backroom.ui.redesign.screens.WelcomeScreen
+import com.example.backroom.ui.screens.help.BackroomFaq
+import com.example.backroom.ui.screens.help.KenyaCrisisResources
 import com.example.backroom.ui.redesign.theme.RedesignTheme
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -108,4 +112,36 @@ class RedesignScreenshotTest {
 
     @Test
     fun afterCall() = shot("08-after") { AfterCallScreen(onAnswer = {}, onSkip = {}) }
+
+    @Test
+    fun settings() = shot("09-settings") {
+        SettingsScreen(
+            blockedCount = 2,
+            previewsEnabled = true,
+            tipsEnabled = false,
+            subscriptionStatus = null,
+            versionName = "Version 1.0.0",
+            onBack = {},
+            onBoundaries = {},
+            onBlockedUsers = {},
+            onSubscription = {},
+            onPreviewsChanged = {},
+            onTipsChanged = {},
+            onExportData = {},
+            onDeleteAccount = {},
+        )
+    }
+
+    // Rendered with the real verified resource list, not a fixture: this screen is the
+    // one whose content being right matters most.
+    @Test
+    fun help() = shot("10-help") {
+        HelpScreen(
+            crisis = KenyaCrisisResources.primaryResources,
+            more = KenyaCrisisResources.specializedResources,
+            faqs = BackroomFaq.allFaqs,
+            onCall = {},
+            onBack = {},
+        )
+    }
 }
