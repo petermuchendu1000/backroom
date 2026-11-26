@@ -19,7 +19,10 @@ export enum SubscriptionProvider {
   STRIPE = 'stripe',
   GOOGLE_PLAY = 'google_play',
   APPLE = 'apple',
+  /** Safaricom Daraja, spoken to directly. Added by 002_mpesa_payments.sql. */
   MPESA = 'mpesa',
+  /** The PalPluss aggregator. Added by 003_payment_gateways.sql. */
+  PALPLUSS = 'palpluss',
 }
 
 @Entity('subscriptions')

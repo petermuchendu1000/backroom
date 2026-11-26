@@ -46,6 +46,30 @@ export default () => ({
     resultUrl: process.env.MPESA_RESULT_URL || 'https://your-domain.com/api/v1/mpesa/result',
   },
 
+  // Which gateway new payments go through. See PaymentProvider:
+  // 'palpluss' (default) or 'daraja' to talk to Safaricom directly.
+  payments: {
+    provider: process.env.PAYMENTS_PROVIDER || 'palpluss',
+  },
+
+  // PalPluss (https://docs.palpluss.com) — an aggregator fronting Daraja.
+  palpluss: {
+    baseUrl: process.env.PALPLUSS_BASE_URL || 'https://api.palpluss.com/v1',
+    // pp_live_… or pp_test_…, sent as HTTP Basic with an empty password. Never commit
+    // it. Test keys hit the same URL and move simulated money.
+    apiKey: process.env.PALPLUSS_API_KEY || '',
+    callbackUrl:
+      process.env.PALPLUSS_CALLBACK_URL ||
+      'https://api.ongero.com/api/v1/payments/palpluss/webhook',
+    // Optional: routes the prompt through one specific shortcode. The account default
+    // is used when this is unset.
+    channelId: process.env.PALPLUSS_CHANNEL_ID || '',
+    // whsec_… from the PalPluss console, under Webhooks, after adding the callback
+    // domain. When unset, callbacks are accepted WITHOUT a signature check — PalPluss
+    // still delivers to unregistered domains, just unsigned.
+    webhookSecret: process.env.PALPLUSS_WEBHOOK_SECRET || '',
+  },
+
   // FCM (Firebase Cloud Messaging)
   fcm: {
     serviceAccountPath: process.env.GOOGLE_APPLICATION_CREDENTIALS || './firebase-service-account.json',

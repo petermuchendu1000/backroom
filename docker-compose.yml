@@ -23,6 +23,7 @@ services:
       # docker-entrypoint-initdb.d alphabetically, and payments references users.
       - ./backend/migrations/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
       - ./backend/migrations/002_mpesa_payments.sql:/docker-entrypoint-initdb.d/02-mpesa-payments.sql:ro
+      - ./backend/migrations/003_payment_gateways.sql:/docker-entrypoint-initdb.d/03-payment-gateways.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-backroom} -d ${POSTGRES_DB:-backroom}"]
       interval: 10s

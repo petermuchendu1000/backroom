@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
-import { InitiatePaymentDto } from './mpesa.dto';
+import { InitiatePaymentDto } from './payment.dto';
 
 /**
  * `plan` decides the price. It used to be @IsString() only, so anything that was not

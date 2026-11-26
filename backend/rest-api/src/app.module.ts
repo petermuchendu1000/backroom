@@ -15,7 +15,7 @@ import { CallsModule } from './modules/calls/calls.module';
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
-import { MpesaModule } from './modules/mpesa/mpesa.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { HealthModule } from './modules/health/health.module';
 
@@ -45,7 +45,7 @@ import { HealthModule } from './modules/health/health.module';
     FeedbackModule,
     ReportsModule,
     SubscriptionsModule,
-    MpesaModule,
+    PaymentsModule,
     NotificationsModule,
     HealthModule,
   ],

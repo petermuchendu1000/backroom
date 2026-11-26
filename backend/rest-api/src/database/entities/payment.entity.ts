@@ -22,9 +22,9 @@ export enum SubscriptionPlan {
 /**
  * One row per STK Push attempt.
  *
- * Written before the prompt reaches the phone, because the Safaricom callback carries
- * nothing that identifies the payer to us except the CheckoutRequestID it echoes back.
- * Without a row to match it against, a callback cannot be attributed, cannot be made
+ * Written before the prompt reaches the phone, because the gateway's result carries
+ * nothing that identifies the payer to us except the correlation id it echoes back.
+ * Without a row to match it against, a result cannot be attributed, cannot be made
  * idempotent, and cannot be distinguished from a forged POST to a necessarily public
  * endpoint.
  */
@@ -43,9 +43,30 @@ export class Payment {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  /** Safaricom's id for this attempt. Unique — this is the callback's idempotency key. */
+  /**
+   * Which gateway issued checkoutRequestId. Deliberately a plain string column rather
+   * than an enum, so adding a gateway is a deploy and not a migration; the allowed
+   * values are the PaymentProvider enum. A webhook is matched on (provider, ref), never
+   * on the ref alone, so one gateway cannot resolve another's payment.
+   */
+  @Column({ type: 'text', default: 'daraja' })
+  provider: string;
+
+  /**
+   * The gateway's id for this attempt, and the idempotency key for its result.
+   * Unique — a replayed result cannot create a second payment, and one naming an id we
+   * never issued matches nothing.
+   */
   @Column({ name: 'checkout_request_id', unique: true })
   checkoutRequestId: string;
+
+  /**
+   * The short reference WE generated and sent. PalPluss echoes it back as
+   * external_reference and caps it at 12 characters. Nullable: rows written before
+   * migration 003 never had one.
+   */
+  @Column({ type: 'text', nullable: true })
+  reference: string | null;
 
   // Explicit type: TypeORM reflects `string | null` as Object and cannot map it.
   @Column({ name: 'merchant_request_id', type: 'text', nullable: true })

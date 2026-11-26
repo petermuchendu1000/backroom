@@ -8,29 +8,35 @@ import {
 } from '../../database/entities/payment.entity';
 import { Subscription } from '../../database/entities/subscription.entity';
 import { SubscriptionTier, User } from '../../database/entities/user.entity';
+import { PaymentProvider } from './payment-gateway';
 import {
   CallbackOutcome,
-  CallbackResult,
+  GatewayCallback,
   PaymentsService,
   expiryFor,
 } from './payments.service';
 
 /**
- * The callback endpoint is public and Safaricom signs nothing, so these tests are
- * mostly about what must NOT happen: a stranger's POST, a replay, or a short payment
- * must never grant a subscription.
+ * The result endpoint is public for every gateway, and Daraja signs nothing, so these
+ * tests are mostly about what must NOT happen: a stranger's POST, a replay, a short
+ * payment, or one gateway's result landing on another gateway's row must never grant a
+ * subscription.
  */
 
 const CHECKOUT = 'ws_CO_01012026123456789';
 
-function successCallback(amount: number | string = 500): CallbackResult {
+function successCallback(
+  amount: number | null = 500,
+  provider: PaymentProvider = PaymentProvider.DARAJA,
+): GatewayCallback {
   return {
+    provider,
+    gatewayRef: CHECKOUT,
     success: true,
-    checkoutRequestId: CHECKOUT,
-    merchantRequestId: 'mr-1',
+    amountKes: amount,
+    receipt: 'QBR1A2B3C4',
     resultCode: 0,
     resultDesc: 'The service request is processed successfully.',
-    metadata: { Amount: amount, MpesaReceiptNumber: 'QBR1A2B3C4', PhoneNumber: 254712345678 },
   };
 }
 
@@ -38,8 +44,10 @@ function pendingPayment(over: Partial<Payment> = {}): Payment {
   return {
     id: 'pay-1',
     userId: 'user-1',
+    provider: PaymentProvider.DARAJA,
     checkoutRequestId: CHECKOUT,
     merchantRequestId: 'mr-1',
+    reference: 'ONGB7K2M9XQ4',
     plan: SubscriptionPlan.MONTHLY,
     amountKes: 500,
     phoneNumber: '0712345678',
@@ -108,7 +116,7 @@ describe('PaymentsService.applyCallback', () => {
     service = moduleRef.get(PaymentsService);
   });
 
-  it('grants nothing for a CheckoutRequestID we never issued', async () => {
+  it('grants nothing for a correlation id we never issued', async () => {
     findOne.mockResolvedValue(null);
 
     const outcome = await service.applyCallback(successCallback());
@@ -116,6 +124,18 @@ describe('PaymentsService.applyCallback', () => {
     expect(outcome).toBe(CallbackOutcome.UNKNOWN_CHECKOUT);
     expect(subscriptionSave).not.toHaveBeenCalled();
     expect(userUpdate).not.toHaveBeenCalled();
+  });
+
+  it('scopes the lookup to the gateway that reported the result', async () => {
+    findOne.mockResolvedValue(null);
+
+    await service.applyCallback(successCallback(500, PaymentProvider.PALPLUSS));
+
+    // Without the provider in the WHERE clause, a PalPluss webhook quoting a Daraja
+    // CheckoutRequestID would resolve that row and could settle it.
+    expect(findOne).toHaveBeenCalledWith({
+      where: { provider: PaymentProvider.PALPLUSS, checkoutRequestId: CHECKOUT },
+    });
   });
 
   it('activates a subscription for a genuine successful payment', async () => {
@@ -141,6 +161,17 @@ describe('PaymentsService.applyCallback', () => {
       isActive: true,
     });
     expect(saved.expiresAt.getTime()).toBeGreaterThan(saved.startedAt.getTime());
+  });
+
+  it('records a PalPluss payment under the palpluss provider, not mpesa', async () => {
+    findOne.mockResolvedValue(pendingPayment({ provider: PaymentProvider.PALPLUSS }));
+
+    const outcome = await service.applyCallback(
+      successCallback(500, PaymentProvider.PALPLUSS),
+    );
+
+    expect(outcome).toBe(CallbackOutcome.ACTIVATED);
+    expect(subscriptionSave.mock.calls[0][0]).toMatchObject({ provider: 'palpluss' });
   });
 
   it('does not activate twice when the same callback is replayed', async () => {
@@ -177,10 +208,7 @@ describe('PaymentsService.applyCallback', () => {
   it('does not activate when the callback carries no amount at all', async () => {
     findOne.mockResolvedValue(pendingPayment());
 
-    const outcome = await service.applyCallback({
-      ...successCallback(),
-      metadata: {},
-    });
+    const outcome = await service.applyCallback(successCallback(null));
 
     expect(outcome).toBe(CallbackOutcome.AMOUNT_MISMATCH);
     expect(subscriptionSave).not.toHaveBeenCalled();
@@ -190,9 +218,11 @@ describe('PaymentsService.applyCallback', () => {
     findOne.mockResolvedValue(pendingPayment());
 
     const outcome = await service.applyCallback({
+      provider: PaymentProvider.DARAJA,
+      gatewayRef: CHECKOUT,
       success: false,
-      checkoutRequestId: CHECKOUT,
-      merchantRequestId: 'mr-1',
+      amountKes: null,
+      receipt: null,
       resultCode: 1032,
       resultDesc: 'Request cancelled by user',
     });

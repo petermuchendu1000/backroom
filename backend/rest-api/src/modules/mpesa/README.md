@@ -1,4 +1,13 @@
-# M-Pesa Integration Guide
+# M-Pesa Integration Guide (direct Safaricom Daraja)
+
+> **This is no longer the default.** Ongero collects through PalPluss, an aggregator
+> that fronts Daraja and — unlike Daraja — signs the callbacks it sends. See
+> [`../payments/README.md`](../payments/README.md) for the gateway architecture and
+> setup. Everything below still applies when `PAYMENTS_PROVIDER=daraja`, and the
+> `/mpesa/*` routes are kept because `MPESA_CALLBACK_URL` is registered with Safaricom.
+>
+> Note that the module itself is now only the HTTP client: what a payment *means* moved
+> to `PaymentsService` in the payments module, shared by every gateway.
 
 This document explains how to set up and use M-Pesa (Safaricom Daraja API) for Ongero subscriptions.
 
