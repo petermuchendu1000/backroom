@@ -128,6 +128,13 @@ dependencies {
     implementation("com.google.firebase:firebase-messaging-ktx")
 
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    // A real HTTP server in-process, so the API client is tested against sockets and
+    // bytes rather than against a mock of OkHttp. Version pinned to the okhttp already
+    // in the build: mockwebserver ships from the same release train and mixing them
+    // pulls a second copy of okhttp onto the test classpath.
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
 
     // Off-device rendering of the redesign screens. These tests live in
     // com.ongero.app.screenshot and are EXCLUDED from the normal test run

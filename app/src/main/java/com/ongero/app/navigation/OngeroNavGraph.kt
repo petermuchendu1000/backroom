@@ -5,7 +5,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -14,6 +18,8 @@ import androidx.navigation.navArgument
 import com.ongero.app.data.PreferencesManager
 import com.ongero.app.data.network.CallManager
 import com.ongero.app.BuildConfig
+import com.ongero.app.ui.payment.PaymentDialog
+import com.ongero.app.ui.payment.PlusPaymentViewModel
 import com.ongero.app.ui.redesign.flow.RedesignHome
 import com.ongero.app.ui.redesign.flow.RedesignInCall
 import com.ongero.app.ui.redesign.flow.RedesignOnboarding
@@ -40,6 +46,7 @@ import com.ongero.app.ui.screens.listener.SetBoundariesScreen
 import com.ongero.app.ui.screens.onboarding.OnboardingScreen
 import com.ongero.app.ui.screens.settings.BlockedUsersScreen
 import com.ongero.app.ui.screens.settings.SettingsScreen
+import com.ongero.app.ui.screens.settings.SubscriptionPlan
 import com.ongero.app.ui.screens.settings.SubscriptionScreen
 import com.ongero.app.ui.screens.sharer.SharerFlowScreen
 import com.ongero.app.ui.screens.sharer.Topic
@@ -481,20 +488,37 @@ fun OngeroNavGraph(
         composable(Screen.Subscription.route) {
             if (BuildConfig.REDESIGN_UI) {
                 RedesignTheme {
+                    // RedesignPlus owns its own PlusPaymentViewModel: paying takes
+                    // over the whole screen there, so the state belongs to it.
                     RedesignPlus(
                         preferencesManager = preferencesManager,
                         onBack = { navController.popBackStack() },
-                        onSubscribe = { /* Initiate M-Pesa payment */ },
                     )
                 }
                 return@composable
             }
+
+            // The original screen has no room for a payment flow, so the same
+            // ViewModel drives a dialog over the top of it. Scoped to this nav entry,
+            // so it survives rotation but not leaving the screen.
+            val paymentViewModel: PlusPaymentViewModel = viewModel(
+                factory = PlusPaymentViewModel.factory(LocalContext.current),
+            )
+            val payment by paymentViewModel.state.collectAsState()
+            var chosenPlan by remember { mutableStateOf(SubscriptionPlan.MONTHLY) }
+
             SubscriptionScreen(
                 preferencesManager = preferencesManager,
                 onBack = { navController.popBackStack() },
                 onSubscribe = { plan ->
-                    // Initiate M-Pesa payment
+                    chosenPlan = plan
+                    paymentViewModel.begin()
                 }
+            )
+            PaymentDialog(
+                state = payment,
+                onPay = { number -> paymentViewModel.pay(chosenPlan, number) },
+                onDismiss = { paymentViewModel.cancel() },
             )
         }
 

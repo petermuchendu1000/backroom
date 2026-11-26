@@ -1,11 +1,15 @@
 package com.ongero.app.ui.redesign.flow
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ongero.app.data.PreferencesManager
+import com.ongero.app.ui.payment.PlusPaymentViewModel
 import com.ongero.app.ui.redesign.screens.BlockedPeopleScreen
 import com.ongero.app.ui.redesign.screens.BoundariesScreen
 import com.ongero.app.ui.redesign.screens.PlusScreen
@@ -70,13 +74,25 @@ fun RedesignBlockedPeople(
     )
 }
 
-/** Ongero Plus, bound to [PreferencesManager]. */
+/**
+ * Ongero Plus, bound to [PreferencesManager] for what is already owned and to
+ * [PlusPaymentViewModel] for buying it.
+ *
+ * A ViewModel rather than remembered state because an STK Push takes as long as it
+ * takes someone to find their phone and type a PIN. A rotation in the middle of that
+ * would otherwise drop the poll, and the screen would have no idea a payment was in
+ * flight — while the money moved anyway.
+ */
 @Composable
 fun RedesignPlus(
     preferencesManager: PreferencesManager,
     onBack: () -> Unit,
-    onSubscribe: (SubscriptionPlan) -> Unit,
+    viewModel: PlusPaymentViewModel = viewModel(
+        factory = PlusPaymentViewModel.factory(LocalContext.current),
+    ),
 ) {
+    val payment by viewModel.state.collectAsState()
+
     PlusScreen(
         activeTier = if (preferencesManager.isSubscriptionActive()) {
             preferencesManager.subscriptionTier
@@ -84,6 +100,9 @@ fun RedesignPlus(
             null
         },
         onBack = onBack,
-        onSubscribe = onSubscribe,
+        onSubscribe = { viewModel.begin() },
+        payment = payment,
+        onPay = { plan, number -> viewModel.pay(plan, number) },
+        onCancelPayment = { viewModel.cancel() },
     )
 }

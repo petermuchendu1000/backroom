@@ -9,6 +9,7 @@ import com.ongero.app.ui.redesign.screens.BlockedPeopleScreen
 import com.ongero.app.ui.redesign.screens.BoundariesScreen
 import com.ongero.app.ui.redesign.screens.HelpScreen
 import com.ongero.app.ui.redesign.screens.IncomingPreviewSheet
+import com.ongero.app.ui.payment.PlusPaymentState
 import com.ongero.app.ui.redesign.screens.PlusScreen
 import com.ongero.app.ui.redesign.screens.RecognitionCheckScreen as RedesignRecognitionCheckScreen
 import com.ongero.app.ui.redesign.screens.ReportScreen
@@ -183,6 +184,46 @@ class RedesignScreenshotTest {
 
     @Test
     fun plus() = shot("16-plus") { PlusScreen(activeTier = null, onBack = {}, onSubscribe = {}) }
+
+    @Test
+    fun plusPhone() = shot("16b-plus-phone") {
+        PlusScreen(
+            activeTier = null,
+            onBack = {},
+            onSubscribe = {},
+            payment = PlusPaymentState.NeedsPhone(),
+        )
+    }
+
+    @Test
+    fun plusWaiting() = shot("16c-plus-waiting") {
+        PlusScreen(
+            activeTier = null,
+            onBack = {},
+            onSubscribe = {},
+            payment = PlusPaymentState.Waiting(amountKes = 500),
+        )
+    }
+
+    @Test
+    fun plusPaid() = shot("16d-plus-paid") {
+        PlusScreen(
+            activeTier = null,
+            onBack = {},
+            onSubscribe = {},
+            payment = PlusPaymentState.Succeeded(receipt = "LGR019G3J2"),
+        )
+    }
+
+    @Test
+    fun plusFailed() = shot("16e-plus-failed") {
+        PlusScreen(
+            activeTier = null,
+            onBack = {},
+            onSubscribe = {},
+            payment = PlusPaymentState.Failed("The prompt was cancelled."),
+        )
+    }
 
     @Test
     fun recognitionCheck() = shot("17-recognition") { RedesignRecognitionCheckScreen(onAnswer = {}) }

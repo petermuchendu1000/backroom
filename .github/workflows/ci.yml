@@ -148,7 +148,7 @@ jobs:
       # ExampleUnitTest + 10 in VoiceAnonymizationTest + 3 in RedesignWireMappingTest.
       # Raise it in the same commit that adds tests.
       - name: Assert the unit tests actually ran
-        run: python3 .github/scripts/assert_junit_results.py app/build/test-results/testDebugUnitTest 14
+        run: python3 .github/scripts/assert_junit_results.py app/build/test-results/testDebugUnitTest 45
 
       - name: Upload test report on failure
         if: failure()
