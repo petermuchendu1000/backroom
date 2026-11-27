@@ -93,3 +93,32 @@
 		}
 	}
 }
+
+# =====================================================================
+# turn.ongero.com — certificate only, nothing served
+# =====================================================================
+# This block exists so that Caddy obtains and renews a certificate for the TURN
+# hostname. coturn needs one to serve TURNS on 5349, cannot obtain its own, and
+# has no ACME client; running a second ACME client beside Caddy would mean two
+# things competing for port 80.
+#
+# The cert-sync service copies the resulting pair into a volume coturn can read.
+# Caddy writes certificates root-owned mode 600 and coturn runs as nobody, so
+# that copy is not optional — see deploy/cert-sync.sh.
+#
+# Nothing is served on this hostname over HTTPS. If something ever should be,
+# put it here; the certificate is already in hand.
+{$TURN_HOST} {
+	handle {
+		respond 404
+	}
+
+	header -Server
+
+	log {
+		output file /data/access-turn.log {
+			roll_size 2MiB
+			roll_keep 2
+		}
+	}
+}

@@ -56,7 +56,7 @@ it does not block anything else.
 
 ## What you are deploying
 
-Six containers, from `docker-compose.yml` plus the `docker-compose.prod.yml` overlay:
+Seven containers, from `docker-compose.yml` plus the `docker-compose.prod.yml` overlay:
 
 | Service | Image / build | Role |
 |---|---|---|
@@ -64,8 +64,46 @@ Six containers, from `docker-compose.yml` plus the `docker-compose.prod.yml` ove
 | `rest-api` | built from `backend/rest-api` | NestJS API, prefix `/api/v1` |
 | `ws-signaling` | built from `backend/ws-signaling` | Go WebSocket signalling |
 | `coturn` | `coturn/coturn:latest` | TURN/STUN relay, **host networking** |
+| `cert-sync` | `coturn/coturn:latest` | Copies Caddy's TURN certificate where coturn can read it |
 | `postgres` | `postgres:15-alpine` | Database |
 | `redis` | `redis:7-alpine` | Cache, presence, pub/sub |
+
+### Why cert-sync exists
+
+coturn needs a certificate to serve TURNS on 5349, cannot obtain one itself, and
+has no ACME client — and running a second ACME client beside Caddy would mean two
+processes competing for port 80. So Caddy obtains the TURN hostname's certificate
+too (there is a site block for it in `deploy/Caddyfile` that serves nothing).
+
+coturn cannot read it directly, and this is the part that looks like it should work:
+
+| | |
+|---|---|
+| Caddy writes certificates | `root:root`, mode **600**, in directories mode **700** |
+| coturn runs as | **`nobody`** (uid 65534) |
+
+Mounting `caddy_data` into coturn leaves the file present and unreadable. Verified
+by doing it: coturn reports `cannot find certificate file`, `ls` as uid 65534
+returns `Permission denied`, and TURNS stays dead. coturn's own error message is
+misleading — it says "cannot find" for a file that is right there.
+
+`cert-sync` copies the pair out and re-owns it: certificate `644`, key `600`, both
+owned by 65534. It discovers Caddy's issuer directory with `find` rather than
+hardcoding `acme-v02.api.letsencrypt.org-directory`, so switching CA or staging
+needs no change. `deploy/coturn-entrypoint.sh` then checks the pair is *readable
+by its own uid* before passing `--cert`/`--pkey`, and says exactly what is wrong
+when it is not:
+
+```
+coturn-entrypoint:   /certs/turn.crt exists but is NOT READABLE by uid 65534 (mode 600, owner 0:0)
+```
+
+coturn has no reload — `turnserver -h` documents no SIGHUP and no way to re-read
+certificates — so the entrypoint also watches the pair and restarts turnserver
+when it changes. That drops in-flight relay sessions, which with a ~60-day
+renewal cycle is a few seconds every other month and is unavoidable short of
+patching coturn. If no certificate ever appears, turnserver starts anyway so
+plain TURN on 3478 keeps working, and logs loudly that TURNS is off.
 
 ### Why the overlay exists
 
@@ -98,9 +136,16 @@ Only these should be reachable from the internet:
 | 80, 443 | TCP | Caddy (80 redirects, and ACME needs it) |
 | 3478 | TCP + UDP | STUN/TURN |
 | 3479 | TCP + UDP | TURN alternative port |
+| 5349 | **TCP only** | TURNS (TURN over TLS) |
 | 49152–65535 | UDP | TURN media relay |
 
-Not 5432. Not 6379. Not 8080. Not 8443. Not 5349 — see *Known gaps*.
+Not 5432. Not 6379. Not 8080. Not 8443.
+
+**5349 is TCP only, deliberately.** WebRTC reaches TURNS over TCP+TLS. The UDP half
+of that port would be DTLS, and coturn documents DTLS as *"not started by
+default"* — it is not enabled here, so opening UDP 5349 would expose a port with
+nothing behind it. Verified: a DTLS client against 5349 gets ECONNREFUSED while
+the TCP+TLS listener on the same port grants allocations normally.
 
 ---
 
@@ -151,7 +196,11 @@ are new subdomains alongside it.
   backend bug.
 - Cloudflare does not proxy arbitrary UDP, so a proxied `turn` record cannot carry TURN
   traffic at all.
-- Caddy needs to answer the ACME challenge on port 80 directly.
+- Caddy needs to answer the ACME challenge on port 80 directly — **for all three
+  names, `turn` included**. Caddy obtains a certificate for the TURN hostname so
+  coturn can serve TURNS on 5349; if `turn.ongero.com` does not resolve here, or
+  port 80 is unreachable for it, TURNS will not come up and clients on
+  UDP-blocking networks will be unable to relay.
 
 Confirm propagation before Step 9, because Caddy will request certificates the moment it
 starts and Let's Encrypt rate-limits failures:
@@ -256,6 +305,7 @@ ufw allow 3478/tcp                  # STUN/TURN
 ufw allow 3478/udp
 ufw allow 3479/tcp                  # TURN alternative port
 ufw allow 3479/udp
+ufw allow 5349/tcp                  # TURNS (TURN over TLS) — TCP only, see above
 ufw allow 49152:65535/udp           # TURN media relay
 
 ufw enable
@@ -341,18 +391,43 @@ It exits non-zero and lists what failed. It checks, in order:
 4. A WebSocket upgrade reaches the signalling service through the proxy.
 5. `JWT_SECRET` and `TURN_STATIC_AUTH_SECRET` agree across containers, compared by
    SHA-256 prefix so no value is printed, and `JWT_SECRET` is not the development default.
-6. **coturn grants a real relay allocation** with a freshly minted credential, *and
-   refuses an expired one* — so the first check is known to be capable of failing.
-7. The expected tables exist (the migration trap above).
-8. `PALPLUSS_WEBHOOK_SECRET` is set.
+6. **coturn grants a real relay allocation** on 3478 with a freshly minted
+   credential, *and refuses both an expired credential and a wrong secret* — so
+   the first check is known to be capable of failing.
+7. **TURNS works on 5349**, checked two independent ways: the TLS listener
+   presents a certificate that verifies against the system trust store, and a
+   TURN allocation completes over TCP+TLS.
+8. `cert-sync` has installed a certificate, and coturn's logs are **visible to
+   `docker logs`** and contain no `Bad configuration format` lines.
+9. The expected tables exist (the migration trap above).
+10. `PALPLUSS_WEBHOOK_SECRET` is set.
 
-On the TURN check: `turnutils_uclient` exits non-zero even on a **successful** allocation
-when the channel bind is refused, and `turnserver.conf` denies relaying to private and
-loopback ranges on purpose. The script therefore reads the allocation result, not the exit
-code. Measured against **coturn 4.19.2** with this exact config: a wrong secret and an
-expired credential both produce `Cannot complete Allocation`; a valid credential gets an
-allocation and then a `403` on channel bind when the peer is a denied address. A secret
-differing by one character is refused.
+Reading `turnutils_uclient` correctly is most of the difficulty, and four separate
+traps are each measured against **coturn 4.19.2** with this exact config:
+
+- **The exit code is useless.** It exits non-zero even on a successful allocation,
+  because `turnserver.conf` refuses the channel bind to a denied peer range with a
+  403 — that list working, not an auth failure.
+- **Absence of the error is not success.** An earlier version of this script
+  treated "no `Cannot complete Allocation`" as a pass. A connection to a **dead
+  port** produced neither the error nor an allocation, and passed. So the script
+  requires the positive signal, `Received relay addr`, which only prints with `-v`.
+- **`-t` is required for TURNS.** Without it the client uses UDP, and `-S` over UDP
+  means DTLS, which coturn does not start by default — so a TURNS check without
+  `-t` fails with ECONNREFUSED against a perfectly healthy TLS listener.
+- **Every probe needs a unique account id.** `user-quota=12`, allocations live up
+  to 600 s, and coturn counts the quota against the id after the colon. Reusing one
+  id makes early probes pass and later ones fail with STUN `486`, so running this
+  script a few times would report TURNS as broken when it is fine. Measured:
+  reused id → `486` and no relay; unique id → 5 relay addresses, three runs of three.
+
+One more thing the logging fix surfaced, which is now a check of its own:
+`turnserver.conf` had carried `no-sslv3`, `no-tlsv1` and `no-tlsv1_1` for the sake
+of "disabling weak algorithms", and coturn 4.19.2 **rejects all three** —
+`WARNING Bad configuration format: no-sslv3`. That section had never done anything,
+and `no-stdout-log` is precisely why nobody could see it. They have been removed:
+this build reports only TLS 1.2, TLS 1.3 and DTLS 1.2, so TLS 1.2 is already the
+floor and the weak versions are not compiled in.
 
 ## Step 11 — PalPluss console
 
@@ -462,14 +537,18 @@ docker compose $C down -v       # DESTROYS the database. There is no undo.
 
 Things this deployment does **not** give you. None is a blocker; all are real.
 
-1. **TURNS (TLS-wrapped TURN) does not work.** `turnserver.conf` sets
-   `tls-listening-port=5349` but contains no `cert=` or `pkey=` lines, so coturn will
-   listen there with no certificate. Do not open 5349. Clients on networks that block
-   plain UDP will fail to relay. Fixing it means pointing coturn at Caddy's certificate
-   for `turn.ongero.com` and adding the two config lines.
-2. **coturn's logs go nowhere useful.** `turnserver.conf` sets both `verbose` and
-   `no-stdout-log` with no `log-file`, so output lands inside the container rather than in
-   `docker logs`. Debugging a relay problem will be blind until that is changed.
+1. **TURNS on 5349 requires port 80 to stay reachable.** It now works — Caddy
+   obtains the certificate, `cert-sync` re-owns it, coturn serves it — but that
+   chain depends on Caddy renewing, which depends on `turn.ongero.com` resolving
+   here and port 80 being open. If renewal silently stops, TURNS degrades about
+   60 days later while plain TURN keeps working, so the failure is quiet. The
+   `ACME_EMAIL` warnings and `deploy/verify.sh` are what surface it; nothing
+   monitors it continuously (see gap 4).
+2. **A certificate renewal restarts coturn and drops active calls.** coturn
+   documents no SIGHUP and no certificate reload, so `deploy/coturn-entrypoint.sh`
+   restarts turnserver when the pair changes. Verified: turnserver restarts and
+   serves the new certificate. Anyone mid-call at that moment is disconnected.
+   Roughly once every 60 days, unavoidable without patching coturn.
 3. **`coturn/coturn:latest` is unpinned, and it has already drifted.** The tag currently
    resolves to **4.19.2**, while the comment in `backend/coturn/turnserver.conf` records a
    behaviour check made against **4.6.1** — so that note is about a different TURN server

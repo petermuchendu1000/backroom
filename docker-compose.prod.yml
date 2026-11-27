@@ -45,6 +45,22 @@ services:
     # Host networking: no published ports, no Docker NAT in front of the relay.
     network_mode: host
     ports: !reset []
+    # No depends_on cert-sync, deliberately: caddy depends on ws-signaling,
+    # which depends on coturn, so ordering coturn after cert-sync (which needs
+    # Caddy's output) would be a cycle — compose rejects it outright. It is also
+    # unnecessary. The entrypoint polls for the certificate, so startup order
+    # does not matter: coturn comes up on 3478 immediately and enables TURNS
+    # whenever the pair appears.
+    # The entrypoint appends --cert/--pkey once it has confirmed the pair in
+    # /certs is readable by coturn's own uid, and restarts turnserver when the
+    # certificate is renewed — coturn documents no SIGHUP and no reload.
+    # Without a usable pair it starts anyway, so plain TURN on 3478 keeps
+    # working, and logs loudly that TURNS is off.
+    entrypoint: ["/bin/bash", "/usr/local/bin/coturn-entrypoint.sh"]
+    volumes:
+      - ./backend/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - ./deploy/coturn-entrypoint.sh:/usr/local/bin/coturn-entrypoint.sh:ro
+      - coturn_certs:/certs:ro
     command:
       - "-c"
       - "/etc/coturn/turnserver.conf"
@@ -107,6 +123,42 @@ services:
       - "127.0.0.1:8443:8443"
 
   # ============================================
+  # CERT-SYNC — bridges Caddy's certificates to coturn
+  # ============================================
+  # Caddy already obtains and renews a certificate for the TURN hostname (there
+  # is a site block for it in deploy/Caddyfile). coturn cannot read it:
+  #
+  #   Caddy writes      root:root, mode 600, in directories mode 700
+  #   coturn runs as    nobody (uid 65534)
+  #
+  # so mounting caddy_data into coturn leaves the file present and unreadable —
+  # coturn's error for that case names no file and reads like a missing cert.
+  # This service copies the pair out and re-owns it: certificate world-readable,
+  # key readable only by uid 65534.
+  #
+  # It runs from the coturn image rather than pulling a third one. That image is
+  # already here, and unlike the alpine base it has openssl, find and sha256sum,
+  # which the script uses to report each certificate's expiry and fingerprint.
+  # user "0:0" because re-owning a file requires root; the script does nothing
+  # else, and caddy_data is mounted read-only.
+  cert-sync:
+    image: coturn/coturn:latest
+    container_name: ongero-cert-sync
+    restart: unless-stopped
+    user: "0:0"
+    entrypoint: ["/bin/sh", "/usr/local/bin/cert-sync.sh"]
+    # No depends_on caddy: it would complete the cycle described on the coturn
+    # service, and the script polls for the certificate anyway.
+    environment:
+      - TURN_HOST=${TURN_HOST:-turn.ongero.com}
+      - CADDY_DATA=/caddy-data
+      - OUT=/out
+    volumes:
+      - ./deploy/cert-sync.sh:/usr/local/bin/cert-sync.sh:ro
+      - caddy_data:/caddy-data:ro
+      - coturn_certs:/out
+
+  # ============================================
   # CADDY — TLS termination and reverse proxy
   # ============================================
   # Caddy obtains and renews Let's Encrypt certificates on its own. It needs ports 80
@@ -124,6 +176,9 @@ services:
     environment:
       - API_HOST=${API_HOST:-api.ongero.com}
       - WS_HOST=${WS_HOST:-ws.ongero.com}
+      # Caddy obtains the TURN hostname's certificate too; coturn reads it via
+      # the cert-sync service. See the turn block in deploy/Caddyfile.
+      - TURN_HOST=${TURN_HOST:-turn.ongero.com}
       - ACME_EMAIL=${ACME_EMAIL:?set ACME_EMAIL in .env — where Let's Encrypt sends expiry warnings}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
@@ -133,3 +188,7 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  # Holds only the TURN certificate and key, re-owned for coturn. Separate from
+  # caddy_data so coturn is never given a path into Caddy's ACME account key or
+  # the certificates for the other hostnames.
+  coturn_certs:

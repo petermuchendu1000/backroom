@@ -181,48 +181,157 @@ head_ "6. TURN actually relays"
 # real allocation. This is the only check that proves the TURN secret, the
 # firewall and the relay port range line up.
 #
-# Reading the output correctly matters here. Measured against coturn 4.19.2 with
-# this exact turnserver.conf:
+# Reading the output correctly is the whole difficulty, and getting it wrong is
+# easy. Three traps, each measured against coturn 4.19.2 with this turnserver.conf:
 #
-#   wrong secret        -> "ERROR Cannot complete Allocation"
-#   expired credential  -> "ERROR Cannot complete Allocation"
-#   VALID credential    -> allocation granted; then "channel bind: error 403"
-#                          when the peer is an address turnserver.conf denies
+#  1. The exit code is useless. turnutils_uclient exits non-zero even on a
+#     SUCCESSFUL allocation, because turnserver.conf's denied-peer-ip list
+#     refuses the channel bind with a 403 — which is that list working, not an
+#     authentication failure.
 #
-# So the discriminator is the ALLOCATION, not the overall exit code —
-# turnutils_uclient exits non-zero even on a successful allocation if the channel
-# bind is refused. A 403 on channel bind is turnserver.conf's denied-peer-ip list
-# doing its job, not an authentication problem.
+#  2. Absence of the error string is NOT success. An earlier version of this
+#     script treated "no 'Cannot complete Allocation'" as a pass. Measured: a
+#     connection to a DEAD PORT produces neither the error nor any allocation,
+#     so it passed. So did a TLS attempt against a port with no TLS listener.
+#     The check must require POSITIVE evidence.
+#
+#  3. "Received relay addr" only appears with -v. Without it the client prints
+#     almost nothing on success.
+#
+# So: require "Received relay addr", the line where the server hands over an
+# actual relay address, and pass -v so it is printed at all.
+#
+# -t forces TCP. Without it the client uses UDP, and with -S that means DTLS,
+# which coturn documents as not started by default — so a TURNS check without
+# -t fails with ECONNREFUSED against a perfectly healthy TLS listener.
+#  4. Every probe must use a DIFFERENT account id. turnserver.conf sets
+#     user-quota=12, allocations live for up to 600s, and coturn counts the
+#     quota against the account id after the colon — not the whole username.
+#     Reusing one id makes the first probes succeed and later ones fail with
+#     STUN error 486 (Allocation Quota Reached), so running this script a few
+#     times in a row would report TURNS as broken when it is fine. Measured:
+#     reused id -> error 486 and no relay; unique id -> 5 relay addresses, three
+#     runs out of three.
+turn_probe() {
+  # turn_probe <secret> <expiry-offset-seconds> <extra-uclient-args...>
+  local secret="$1" offset="$2"; shift 2
+  local exp u p
+  exp=$(( $(date +%s) + offset ))
+  # Unique per probe AND per run of this script, so nothing accumulates.
+  u="${exp}:vfy-$$-${RANDOM}"
+  p=$(printf '%s' "$u" | openssl dgst -sha1 -hmac "$secret" -binary | base64)
+  docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+    exec -T coturn turnutils_uclient -v -y "$@" -u "$u" -w "$p" \
+    -n 1 "${PUBLIC_IP:-$TURN_HOST}" 2>&1
+}
+granted()  { printf '%s' "$1" | grep -q "Received relay addr"; }
+refused()  { printf '%s' "$1" | grep -q "Cannot complete Allocation"; }
+over_quota() { printf '%s' "$1" | grep -q "error 486"; }
+
 if [ -n "${api_turn:-}" ]; then
-  expiry=$(( $(date +%s) + 600 ))
-  tuser="${expiry}:verify"
-  tpass=$(printf '%s' "$tuser" | openssl dgst -sha1 -hmac "$api_turn" -binary | base64)
-  turn_out=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml \
-               exec -T coturn turnutils_uclient -y -u "$tuser" -w "$tpass" \
-               -n 1 "${PUBLIC_IP:-$TURN_HOST}" 2>&1)
-  if printf '%s' "$turn_out" | grep -qi "Cannot complete Allocation"; then
-    bad "coturn REFUSED the allocation — TURN_STATIC_AUTH_SECRET disagrees between coturn and rest-api, or the clock has drifted"
-  elif printf '%s' "$turn_out" | grep -qiE "uclient"; then
-    ok "coturn granted a relay allocation with a freshly minted credential"
+  # --- plain TURN on 3478: the critical path -------------------------------
+  out=$(turn_probe "$api_turn" 600)
+  if granted "$out"; then
+    ok "coturn granted a relay allocation on 3478 with a freshly minted credential"
+  elif over_quota "$out"; then
+    bad "coturn hit the allocation quota (STUN 486) on 3478 — check user-quota/total-quota in turnserver.conf"
+  elif refused "$out"; then
+    bad "coturn REFUSED the allocation on 3478 — TURN_STATIC_AUTH_SECRET disagrees between coturn and rest-api, or the clock has drifted"
   else
-    bad "turnutils_uclient produced no recognisable output — is UDP 3478 reachable? Output: $(printf '%s' "$turn_out" | head -c 200)"
+    bad "no allocation and no refusal on 3478 — is the port reachable? Output: $(printf '%s' "$out" | tail -c 200)"
   fi
 
-  # An expired credential MUST be refused. Without this, the check above could
-  # pass against a coturn that accepts anything.
-  stale=$(( $(date +%s) - 600 ))
-  suser="${stale}:verify"
-  spass=$(printf '%s' "$suser" | openssl dgst -sha1 -hmac "$api_turn" -binary | base64)
-  stale_out=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml \
-                exec -T coturn turnutils_uclient -y -u "$suser" -w "$spass" \
-                -n 1 "${PUBLIC_IP:-$TURN_HOST}" 2>&1)
-  if printf '%s' "$stale_out" | grep -qi "Cannot complete Allocation"; then
+  # An expired credential MUST be refused, or the check above proves nothing.
+  out=$(turn_probe "$api_turn" -600)
+  if refused "$out"; then
     ok "coturn refuses an EXPIRED credential (so the check above can fail)"
-  else
+  elif granted "$out"; then
     bad "coturn ACCEPTED an expired credential — it is not enforcing expiry, and anyone can use the relay"
+  else
+    bad "expired-credential probe produced neither signal; the allocation check above cannot be trusted"
+  fi
+
+  # A wrong secret MUST be refused too. Catches a coturn started without the
+  # shared secret reaching it at all.
+  out=$(turn_probe "definitely-not-the-turn-secret" 600)
+  if refused "$out"; then
+    ok "coturn refuses a WRONG secret"
+  else
+    bad "coturn did not refuse a wrong secret — authentication is not being enforced"
+  fi
+
+  # --- TURNS on 5349: TCP + TLS -------------------------------------------
+  # Two independent channels, because they fail for different reasons and the
+  # TURN client's message for a TLS problem does not say "TLS".
+  #
+  # Channel 1: the TLS listener itself, with no TURN semantics involved. The
+  # certificate comes from Let's Encrypt, so it verifies against the system
+  # trust store; -verify_return_error makes openssl FAIL on a bad chain instead
+  # of reporting it and carrying on.
+  tls_out=$(printf '' | timeout 15 openssl s_client -connect "${TURN_HOST}:5349" \
+              -servername "$TURN_HOST" -verify_return_error 2>&1)
+  if printf '%s' "$tls_out" | grep -q "Verify return code: 0 (ok)"; then
+    san=$(printf '%s' "$tls_out" | openssl x509 -noout -ext subjectAltName 2>/dev/null | tail -1 | tr -d ' ')
+    ok "TURNS TLS listener on ${TURN_HOST}:5349 presents a valid certificate (${san:-SAN unavailable})"
+  elif printf '%s' "$tls_out" | grep -q "CONNECTED"; then
+    bad "5349 accepts TLS but the certificate does NOT verify: $(printf '%s' "$tls_out" | grep -iE 'verify (error|return)' | head -1)"
+  else
+    bad "nothing is listening for TLS on ${TURN_HOST}:5349 — is UDP/TCP 5349 open, and did cert-sync install a certificate?"
+  fi
+
+  # Channel 2: a real TURN allocation through that listener. -t forces TCP; with
+  # UDP, -S means DTLS, which coturn does not start by default.
+  out=$(turn_probe "$api_turn" 600 -t -S -p 5349)
+  if granted "$out"; then
+    ok "TURNS granted a relay allocation over TCP+TLS on 5349"
+  elif over_quota "$out"; then
+    bad "TURNS hit the allocation quota (STUN 486) — unexpected with a unique account id; is user-quota in turnserver.conf very low, or is something else minting allocations?"
+  elif refused "$out"; then
+    bad "TURNS listener is up but refused the credential on 5349"
+  else
+    bad "TURNS is NOT working on 5349 — clients on UDP-blocking networks cannot relay. Check 'docker compose logs coturn' and 'docker compose logs cert-sync'. Output: $(printf '%s' "$out" | tail -c 200)"
   fi
 else
-  bad "could not read TURN_STATIC_AUTH_SECRET from rest-api; skipped the allocation test"
+  bad "could not read TURN_STATIC_AUTH_SECRET from rest-api; skipped every allocation test"
+fi
+
+# -------------------------------------------------------------------------
+head_ "6b. TURN certificate and logging"
+# -------------------------------------------------------------------------
+# coturn cannot obtain its own certificate, so Caddy gets one for the TURN
+# hostname and cert-sync re-owns it: Caddy writes root:root mode 600 and coturn
+# runs as nobody, so without that copy the file is present and unreadable.
+cs_log=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=50 cert-sync)
+if printf '%s' "$cs_log" | grep -q "installed certificate"; then
+  ok "cert-sync installed a certificate: $(printf '%s' "$cs_log" | grep 'installed certificate' | tail -1 | sed 's/.*(\(expires[^)]*\)).*/\1/')"
+else
+  bad "cert-sync has not installed a certificate — TURNS cannot work. Is there a site block for \$TURN_HOST in the Caddyfile, and does it resolve here?"
+fi
+
+# The logging fix. This previously returned ZERO lines: turnserver.conf set
+# no-stdout-log with no log-file, so coturn wrote to /var/tmp inside the
+# container — invisible to docker logs and destroyed with the container. The
+# startup errors explaining why TURNS was dead were in there, unread.
+co_log=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml logs --tail=50 coturn)
+if [ -n "$(printf '%s' "$co_log" | tr -d '[:space:]')" ]; then
+  ok "coturn logs are visible to docker ($(printf '%s' "$co_log" | wc -l) lines)"
+else
+  bad "coturn produced NO log output — has no-stdout-log come back, or log-file=stdout been removed?"
+fi
+
+# coturn says this explicitly when the certificate is missing or unreadable.
+if printf '%s' "$co_log" | grep -q "tls-listening-port .* is configured, but the TLS and DTLS listeners are disabled"; then
+  bad "coturn reports the TLS listener is DISABLED — the certificate is missing or not readable by uid 65534"
+else
+  ok "coturn reports no TLS listener failure"
+fi
+
+# These three were silently rejected by coturn 4.19.2 for as long as they
+# existed, and no-stdout-log is why nobody saw it.
+if printf '%s' "$co_log" | grep -q "Bad configuration format"; then
+  bad "coturn REJECTED configuration directives: $(printf '%s' "$co_log" | grep -o 'Bad configuration format: [a-z0-9_-]*' | sort -u | tr '\n' ' ')"
+else
+  ok "coturn accepted every directive in turnserver.conf"
 fi
 
 # -------------------------------------------------------------------------
