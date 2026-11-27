@@ -380,7 +380,7 @@ head_ "7. Database schema is present"
 # The migrations are mounted into docker-entrypoint-initdb.d, which Postgres runs
 # ONLY when it initialises an empty data directory. If the volume already existed
 # when you first started the stack, they never ran and these tables are missing.
-for tbl in users subscriptions payment_transactions; do
+for tbl in users subscriptions payments; do
   n=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml \
         exec -T postgres psql -U "${POSTGRES_USER:-ongero}" -d "${POSTGRES_DB:-ongero}" \
         -tAc "SELECT count(*) FROM information_schema.tables WHERE table_name='$tbl'")
@@ -388,6 +388,21 @@ for tbl in users subscriptions payment_transactions; do
     ok "table '$tbl' exists"
   else
     bad "table '$tbl' is MISSING — the init migrations did not run against this volume"
+  fi
+done
+
+# 002_mpesa_payments.sql CREATEs payments; 003_payment_gateways.sql only ALTERs it.
+# Checking for the table cannot tell those two apart, so a stack where 03- never ran
+# would pass the loop above and then fail at runtime the first time the PalPluss code
+# writes a reference. Check a column only 003 adds.
+for col in provider reference; do
+  n=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+        exec -T postgres psql -U "${POSTGRES_USER:-ongero}" -d "${POSTGRES_DB:-ongero}" \
+        -tAc "SELECT count(*) FROM information_schema.columns WHERE table_name='payments' AND column_name='$col'")
+  if [ "$(printf '%s' "$n" | tr -d '[:space:]')" = "1" ]; then
+    ok "column payments.$col exists (03-payment-gateways.sql ran)"
+  else
+    bad "column payments.$col is MISSING — 03-payment-gateways.sql did not run against this volume"
   fi
 done
 
