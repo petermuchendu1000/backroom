@@ -1,0 +1,135 @@
+# Ongero — production overlay.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# docker-compose.yml on its own is a DEVELOPMENT file: it publishes Postgres and Redis
+# on every interface, runs the API with NODE_ENV=development, hands clients an internal
+# TURN hostname, and terminates no TLS. On a box with a public IP that is a database
+# open to the internet. This overlay is what makes the same stack safe to expose.
+#
+# What it changes, and why each one matters:
+#
+#   Postgres and Redis   bound to 127.0.0.1. Nothing outside the host can reach them.
+#   coturn               host networking. A TURN relay hands out the ports it is
+#                        listening on, so it cannot sit behind Docker's NAT; host mode
+#                        also avoids publishing 16,000 UDP ports through the userland
+#                        proxy, which is slow to start and heavy at runtime.
+#   rest-api / ws        bound to 127.0.0.1 and reached only through Caddy.
+#   caddy                TLS on 443 for api. and ws.ongero.com, certificates obtained
+#                        and renewed automatically.
+#   TURN_URL             the PUBLIC turn.ongero.com. The development file says
+#                        turn:coturn:3478, which resolves only inside the Docker
+#                        network — a phone given that address has nowhere to go.
+#
+# Everything secret comes from .env. See docs/10_PRODUCTION_DEPLOYMENT.md.
+
+services:
+  postgres:
+    # !override REPLACES the base file's port list. Without it Compose MERGES the two
+    # lists and the base file's "5432:5432" — every interface — survives alongside this
+    # one. That merge rule is why a public database stays public if you only narrow it
+    # here. The same applies to every `ports` key below.
+    ports: !override
+      # Loopback only. Reachable with `docker compose exec` or an SSH tunnel.
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB in .env}
+
+  redis:
+    ports: !override
+      - "127.0.0.1:6379:6379"
+
+  coturn:
+    # Host networking: no published ports, no Docker NAT in front of the relay.
+    network_mode: host
+    ports: !reset []
+    command:
+      - "-c"
+      - "/etc/coturn/turnserver.conf"
+      - "--static-auth-secret=${TURN_STATIC_AUTH_SECRET:?set TURN_STATIC_AUTH_SECRET in .env}"
+      # Without this coturn advertises the address of whatever interface it bound to.
+      # On a cloud VM with a single public IP that is usually right, but stating it
+      # removes the guess — and it is wrong the moment the box is behind a NAT.
+      - "--external-ip=${PUBLIC_IP:?set PUBLIC_IP in .env — the server's public IPv4}"
+      - "--realm=${TURN_REALM:-ongero.com}"
+
+  rest-api:
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:?}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?}
+      - POSTGRES_DB=${POSTGRES_DB:?}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:?set JWT_SECRET in .env}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-15m}
+      # PUBLIC addresses: these are handed to phones, not used inside the network.
+      - TURN_URL=turn:${TURN_HOST:-turn.ongero.com}:3478
+      - STUN_URL=stun:${TURN_HOST:-turn.ongero.com}:3478
+      - TURN_STATIC_AUTH_SECRET=${TURN_STATIC_AUTH_SECRET:?}
+      - TURN_CREDENTIAL_TTL=${TURN_CREDENTIAL_TTL:-3600}
+      # Payments
+      - PAYMENTS_PROVIDER=${PAYMENTS_PROVIDER:-palpluss}
+      - PALPLUSS_BASE_URL=${PALPLUSS_BASE_URL:-https://api.palpluss.com/v1}
+      - PALPLUSS_API_KEY=${PALPLUSS_API_KEY:?set PALPLUSS_API_KEY in .env}
+      - PALPLUSS_CALLBACK_URL=${PALPLUSS_CALLBACK_URL:?set PALPLUSS_CALLBACK_URL in .env}
+      - PALPLUSS_CHANNEL_ID=${PALPLUSS_CHANNEL_ID:-}
+      - PALPLUSS_WEBHOOK_SECRET=${PALPLUSS_WEBHOOK_SECRET:-}
+      - SUBSCRIPTION_MONTHLY_PRICE=${SUBSCRIPTION_MONTHLY_PRICE:-500}
+      - SUBSCRIPTION_YEARLY_PRICE=${SUBSCRIPTION_YEARLY_PRICE:-5000}
+      # Push notifications
+      - FCM_PROJECT_ID=${FCM_PROJECT_ID:?set FCM_PROJECT_ID in .env}
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/firebase-service-account.json
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://ongero.com}
+    volumes:
+      - ./secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
+    ports: !override
+      - "127.0.0.1:8080:8080"
+
+  ws-signaling:
+    environment:
+      - WS_PORT=8443
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:?}
+      - TURN_URL=turn:${TURN_HOST:-turn.ongero.com}:3478
+      - TURN_STATIC_AUTH_SECRET=${TURN_STATIC_AUTH_SECRET:?}
+      - TURN_CREDENTIAL_TTL=${TURN_CREDENTIAL_TTL:-3600}
+      - FCM_PROJECT_ID=${FCM_PROJECT_ID:?}
+      - GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/firebase-service-account.json
+    volumes:
+      - ./secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
+    ports: !override
+      - "127.0.0.1:8443:8443"
+
+  # ============================================
+  # CADDY — TLS termination and reverse proxy
+  # ============================================
+  # Caddy obtains and renews Let's Encrypt certificates on its own. It needs ports 80
+  # and 443 on the public interface and the DNS records already pointing here.
+  caddy:
+    image: caddy:2-alpine
+    container_name: ongero-caddy
+    restart: unless-stopped
+    depends_on:
+      - rest-api
+      - ws-signaling
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - API_HOST=${API_HOST:-api.ongero.com}
+      - WS_HOST=${WS_HOST:-ws.ongero.com}
+      - ACME_EMAIL=${ACME_EMAIL:?set ACME_EMAIL in .env — where Let's Encrypt sends expiry warnings}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:
