@@ -1,7 +1,7 @@
 # Deploying the Ongero backend to Vultr
 
-A step-by-step guide for the existing server at **95.179.203.236** (Vultr, London GB,
-Debian 12 x64, instance `company-registration`).
+A step-by-step guide for **`ongero-backend`** — Vultr, London GB, Debian 12 x64,
+2 vCPU / 4 GB / 80 GB SSD, at **95.179.194.39**.
 
 Everything here runs against files committed in this repository. You do not hand-write a
 compose file or a proxy config; `docker-compose.prod.yml`, `deploy/Caddyfile` and
@@ -9,20 +9,25 @@ compose file or a proxy config; `docker-compose.prod.yml`, `deploy/Caddyfile` an
 
 ---
 
-## Two things to settle before you touch the server
+## Why this is a dedicated box
 
-### 1. That instance is named `company-registration`
+An earlier draft of this guide targeted `95.179.194.39`, the instance named
+`company-registration`, and opened by insisting on an inventory before touching it.
+That inventory is why you are reading a different address now. That server turned out to
+be running a live operator console at `gglabs.tukaze.com` — a systemd-managed Caddy on
+ports 80 and 443 reverse-proxying a Python app in `/opt/company_registration`, alongside
+an Android SDK and Playwright build environment, on 2 vCPU and 3.9 GB.
 
-The Vultr console shows this server as `company-registration`, which is not a name
-anybody picks for an Ongero backend. Either it was reused, or something else is already
-running on it. **Step 1 below is an inventory, and it is not optional.** Deploying onto a
-box that is already serving something will take that something down: Caddy binds ports 80
-and 443 exclusively, and coturn under host networking binds 3478 and a large UDP range.
+Deploying here would have collided three ways: Caddy binds 80 and 443 exclusively, Docker
+was not installed and installing it writes iptables rules beside the ufw config guarding
+that console, and coturn relaying live audio would contend for CPU with someone's
+production web app.
 
-If it turns out the server is in use, the honest options are a second Vultr instance or a
-deliberate decision to retire what is there. Do not find this out by watching it break.
+So Ongero got its own instance. The lesson worth keeping: **an instance's name is not
+evidence of what it runs.** If you ever point this guide at a different server, run the
+inventory in *Appendix A* first. It is read-only and it takes a minute.
 
-### 2. London is roughly 7,000 km from Nairobi
+## One thing to know: London is roughly 7,000 km from Nairobi
 
 This instance is in London (EMEA). Ongero's users are in Kenya. For the REST API that
 costs one round trip and nobody notices. For **TURN-relayed audio it is the whole call
@@ -38,19 +43,26 @@ Relayed calls would carry roughly 300–380 ms of mouth-to-ear delay *(ESTIMATE)
 the ~150 ms where conversation starts feeling like a radio interview. Direct
 peer-to-peer calls are unaffected; only relayed ones pay this.
 
-Two reasonable responses:
+London was chosen deliberately, with Johannesburg available in the Vultr console and not
+taken. That is a defensible call — London is well connected and already understood — but
+it was made **without measuring**, so the figures above remain estimates rather than
+facts about this server.
 
-- **Deploy here now, and plan to move TURN.** The API and database are latency-tolerant.
-  coturn is the piece that cares, and `TURN_HOST` is one environment variable — you can
-  point it at an African-region relay later without redeploying anything else. Vultr has
-  no Kenyan region; Johannesburg is the closest *(VERIFY in the Vultr console before
-  relying on it)*.
-- **Measure before deciding.** `mtr --report --tcp --port 443 95.179.203.236` from a
-  Kenyan connection gives you a real number instead of my estimate. Do this; it is five
-  minutes and it replaces two guesses with a fact.
+This is reversible and does not block anything. `TURN_HOST` is a single environment
+variable: coturn can move to its own box in a nearer region later without redeploying the
+API, the database or the signalling service. The API and database are latency-tolerant and
+would stay here regardless.
 
-I would deploy here and treat relay placement as a known follow-up. It is reversible and
-it does not block anything else.
+If relayed call quality ever becomes a complaint, measure before moving anything. From a
+Kenyan connection, against this server and a Johannesburg candidate:
+
+```bash
+mtr --report --report-cycles 20 --tcp --port 443 95.179.194.39
+```
+
+That replaces two estimates with a number. Until someone runs it, nobody knows whether
+Johannesburg would actually be better — East African routing often still transits Europe
+even when a nearer datacentre exists.
 
 ---
 
@@ -149,44 +161,37 @@ the TCP+TLS listener on the same port grants allocations normally.
 
 ---
 
-## Step 1 — Inventory the server before changing anything
+## Step 1 — First login and lock down SSH
 
 ```bash
-ssh root@95.179.203.236
+ssh -i ~/.ssh/<your-key> root@95.179.194.39
 ```
+
+This box is fresh, so there is nothing to inventory — but it has a public IP and is being
+scanned for weak SSH already. If you deployed with an SSH key, turn password
+authentication off before anything else:
 
 ```bash
-# What is running, and what owns the ports Ongero needs?
-systemctl list-units --type=service --state=running
-ss -ltnp
-ss -lunp
-docker ps -a 2>/dev/null || echo "docker not installed"
-ls -la /opt /srv /var/www /home 2>/dev/null
-crontab -l 2>/dev/null; ls -la /etc/cron.d/ 2>/dev/null
+sed -i 's/^#*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config && sshd -t && systemctl reload ssh
 ```
 
-Read the output before continuing. Specifically: **is anything holding 80, 443, 3478, or
-a UDP port above 49152?** If yes, stop and decide what happens to it. Also check
-`df -h` and `free -m` — the build needs a few GB free.
+`sshd -t` validates the config before the reload, so a typo cannot lock you out. **Keep
+this session open** until you have confirmed a second one works.
 
-Capture the inventory somewhere you can refer back to:
-
-```bash
-{ date -u; echo '--- services'; systemctl list-units --type=service --state=running; \
-  echo '--- tcp'; ss -ltnp; echo '--- udp'; ss -lunp; echo '--- disk'; df -h; } \
-  > /root/pre-ongero-inventory.txt
-```
+If you deployed with Vultr's emailed root password instead, add your key first
+(`ssh-copy-id -i ~/.ssh/<your-key>.pub root@95.179.194.39` from your laptop) and only
+then run the line above.
 
 ## Step 2 — DNS
 
-Three A records, all to `95.179.203.236`. The website stays on Cloudflare Pages; these
+Three A records, all to `95.179.194.39`. The website stays on Cloudflare Pages; these
 are new subdomains alongside it.
 
 | Name | Type | Value | Proxy |
 |---|---|---|---|
-| `api` | A | 95.179.203.236 | **DNS only — grey cloud** |
-| `ws` | A | 95.179.203.236 | **DNS only — grey cloud** |
-| `turn` | A | 95.179.203.236 | **DNS only — grey cloud** |
+| `api` | A | 95.179.194.39 | **DNS only — grey cloud** |
+| `ws` | A | 95.179.194.39 | **DNS only — grey cloud** |
+| `turn` | A | 95.179.194.39 | **DNS only — grey cloud** |
 
 **All three must be grey-cloud (unproxied).** This matters more than it looks:
 
@@ -209,7 +214,7 @@ starts and Let's Encrypt rate-limits failures:
 dig +short api.ongero.com ws.ongero.com turn.ongero.com
 ```
 
-All three must return `95.179.203.236` and nothing else.
+All three must return `95.179.194.39` and nothing else.
 
 ## Step 3 — Install Docker
 
@@ -258,7 +263,7 @@ echo "TURN_STATIC_AUTH_SECRET=$(openssl rand -hex 32)"
 
 Paste those into `.env`, then fill in by hand: `ACME_EMAIL`, `PALPLUSS_API_KEY`,
 `PALPLUSS_WEBHOOK_SECRET`, `FCM_PROJECT_ID`. `PUBLIC_IP` is already
-`95.179.203.236` in the example.
+`95.179.194.39` in the example.
 
 Three notes that cause real outages:
 
@@ -599,3 +604,32 @@ accepts a valid credential while refusing an expired one.
 It does **not** prove that two people in Kenya can hold a call. That requires two physical
 devices on different networks, and no amount of server-side checking substitutes for it.
 Treat a green `verify.sh` as a cleared runway, not a completed flight.
+
+---
+
+## Appendix A — Inventory, for pointing this guide at another server
+
+Everything above assumes a dedicated box. If you ever aim this at a server that already
+exists, run this **first**. It is read-only. An instance's name tells you nothing about
+what it runs — that is how `company-registration` nearly became Ongero's host while
+serving a live operator console.
+
+```bash
+{ echo "===== HOST ====="; uname -a; cat /etc/os-release | head -3; uptime; echo; echo "===== LISTENING TCP ====="; ss -ltnp 2>&1; echo; echo "===== LISTENING UDP ====="; ss -lunp 2>&1; echo; echo "===== RUNNING SERVICES ====="; systemctl list-units --type=service --state=running --no-pager --no-legend 2>&1 | head -40; echo; echo "===== CADDY / NGINX CONFIG ====="; find /etc/caddy /etc/nginx /opt /srv /root /home -maxdepth 4 \( -iname 'Caddyfile*' -o -iname '*.nginx' \) 2>/dev/null | head; echo; echo "===== DOCKER ====="; docker ps -a 2>&1; docker compose ls 2>&1; echo; echo "===== APP DIRECTORIES ====="; ls -la /opt /srv /var/www 2>&1 | head -40; echo; echo "===== CRON ====="; crontab -l 2>&1; ls -la /etc/cron.d/ 2>&1 | head; echo; echo "===== FIREWALL ====="; ufw status verbose 2>&1; echo; echo "===== RESOURCES ====="; df -h / 2>&1; free -m 2>&1; nproc; } 2>&1 | tee /root/pre-ongero-inventory.txt
+```
+
+Read it before continuing. The questions it answers:
+
+- **Is anything holding 80, 443, 3478, 5349, or UDP above 49152?** Caddy binds 80 and 443
+  exclusively; coturn under host networking takes 3478, 5349 and the relay range.
+- **What hostnames does an existing reverse proxy serve?** That identifies the project
+  faster than any directory listing.
+- **Is Docker installed?** Installing it on a live box writes iptables rules beside
+  whatever firewall is already protecting that service.
+- **Disk, RAM and core count.** Two images build from source here, and coturn relays live
+  media.
+
+If the box is in use, the honest options are a separate instance, or merging Ongero's
+hostnames into the existing reverse proxy and dropping the `caddy` service from the
+overlay. The second couples two products' uptime together — choose it deliberately, not
+by accident.
