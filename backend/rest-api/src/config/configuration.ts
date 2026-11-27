@@ -10,6 +10,13 @@ export default () => ({
     username: process.env.POSTGRES_USER || 'backroom',
     password: process.env.POSTGRES_PASSWORD || 'backroom_dev_password',
     database: process.env.POSTGRES_DB || 'backroom',
+    // Opt-in, NOT derived from NODE_ENV. This used to be `nodeEnv === 'production'`,
+    // which broke every self-hosted deployment: the official postgres image ships
+    // `ssl = off`, so pg asked for TLS, the server said no, and TypeORM retried
+    // forever with "The server does not support SSL connections" while the API never
+    // bound its port. Set POSTGRES_SSL=true only for a managed database that requires
+    // TLS (RDS, Neon, Supabase). A container on the compose network does not.
+    ssl: process.env.POSTGRES_SSL === 'true',
   },
 
   // Redis

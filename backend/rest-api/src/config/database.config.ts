@@ -19,7 +19,10 @@ export const databaseConfig = (
   // it would have rewritten columns instead.
   synchronize: false,
   logging: configService.get<string>('nodeEnv') === 'development',
-  ssl: configService.get<string>('nodeEnv') === 'production'
+  // rejectUnauthorized stays false because managed providers hand out certificates
+  // signed by their own roots, which are not in the image's trust store. It encrypts
+  // without authenticating the server, so it is not a substitute for a private network.
+  ssl: configService.get<boolean>('database.ssl')
     ? { rejectUnauthorized: false }
     : false,
 });
