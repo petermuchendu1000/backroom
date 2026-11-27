@@ -418,6 +418,66 @@ else
 fi
 
 # -------------------------------------------------------------------------
+head_ "9. Firebase points at one project, and the credentials work"
+# -------------------------------------------------------------------------
+# Several things have to name the same Firebase project and NOTHING fails loudly
+# when they disagree. ws-signaling interpolates the id into
+#   https://fcm.googleapis.com/v1/projects/<id>/messages:send
+# and an FCM token is scoped to the project the APK registered with. A mismatch
+# therefore delivers nothing while every service still logs a successful init —
+# which is exactly what happened before 2494ea4: FIREBASE_PROJECT_ID was never set,
+# the code fell back to a hardcoded "backroom-b51b1", and the log said
+# "FCM client initialized for push notifications".
+#
+# NOT CHECKED HERE: app/google-services.json. The copy in this checkout is the
+# committed placeholder; the one that matters is on whichever machine builds the
+# APK. Check it there:
+#   grep -o '"project_id": *"[^"]*"' app/google-services.json
+fcm_ws=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+           exec -T ws-signaling printenv FCM_PROJECT_ID | tr -d '[:space:]')
+fcm_api=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+            exec -T rest-api printenv FCM_PROJECT_ID | tr -d '[:space:]')
+
+if [ -n "$fcm_ws" ]; then
+  ok "ws-signaling has FCM_PROJECT_ID=$fcm_ws"
+else
+  bad "ws-signaling has no FCM_PROJECT_ID — pushes cannot be addressed"
+fi
+
+if [ "$fcm_ws" = "$fcm_api" ]; then
+  ok "rest-api agrees on the project id"
+else
+  bad "project id disagrees: ws-signaling='$fcm_ws' rest-api='$fcm_api'"
+fi
+
+key=secrets/firebase-service-account.json
+if [ -f "$key" ]; then
+  fcm_key=$(grep -o '"project_id"[[:space:]]*:[[:space:]]*"[^"]*"' "$key" | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+  if [ "$fcm_key" = "$fcm_ws" ]; then
+    ok "the service account key belongs to $fcm_key"
+  else
+    bad "the service account key is for '$fcm_key' but the services send to '$fcm_ws' — every push will be 403"
+  fi
+else
+  bad "$key is missing — no phone will ever ring"
+fi
+
+# The one that can only pass if Google actually authenticated us. A deliberately
+# invalid token returns invalid-argument ONLY after the credentials are accepted;
+# a bad key or a wrong project fails earlier, with an auth or permission error.
+NODE_PROBE='const a=require("firebase-admin"),s=require("/run/secrets/firebase-service-account.json");a.initializeApp({credential:a.credential.cert(s),projectId:s.project_id});a.messaging().send({token:"deliberately-invalid-token",notification:{title:"t",body:"b"}}).then(()=>console.log("UNEXPECTED_SUCCESS")).catch(e=>console.log(e.code||e.message))'
+cred=$(docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+         exec -T rest-api node -e "$NODE_PROBE" 2>&1)
+case "$cred" in
+  *invalid-argument*)
+    ok "FCM credentials authenticate (Google rejected a deliberately invalid token, which it can only do after accepting the key)" ;;
+  *UNEXPECTED_SUCCESS*)
+    bad "FCM accepted a token that cannot exist — this probe is not testing what it claims" ;;
+  *)
+    bad "FCM credential probe failed to authenticate: $cred" ;;
+esac
+
+# -------------------------------------------------------------------------
 printf '\n\033[1m================ %d passed, %d failed ================\033[0m\n' "$pass" "$fail"
 if [ "$fail" -gt 0 ]; then
   printf '\nFailed checks:\n'
