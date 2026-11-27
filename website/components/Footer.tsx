@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MotionToggle } from "./MotionControls";
 import styles from "@/app/landing.module.css";
 
 export default function Footer() {
@@ -19,7 +20,10 @@ export default function Footer() {
             <Link href="/crisis">Urgent help</Link>
           </nav>
         </div>
-        <p>© {new Date().getFullYear()} Ongero. Built in Kenya.</p>
+        <div className={styles.footerBottom}>
+          <p>© {new Date().getFullYear()} Ongero. Built in Kenya.</p>
+          <MotionToggle />
+        </div>
       </div>
     </footer>
   );

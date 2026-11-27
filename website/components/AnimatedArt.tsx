@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { MotionContext } from "./MotionControls";
 
 const artworkSizes = {
   "voice-masking": [504, 312],
@@ -24,55 +25,41 @@ export default function AnimatedArt({
   className?: string;
 }) {
   const container = useRef<HTMLSpanElement>(null);
-  const hasAnimated = useRef(false);
-  const [animated, setAnimated] = useState(false);
+  const { paused } = useContext(MotionContext);
+  const [allowsMotion, setAllowsMotion] = useState(false);
+  const [hasAppeared, setHasAppeared] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setAllowsMotion(!preference.matches);
+    update();
+    preference.addEventListener("change", update);
+    return () => preference.removeEventListener("change", update);
+  }, []);
 
   useEffect(() => {
     const target = container.current;
     if (!target) return;
 
-    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let observer: IntersectionObserver | undefined;
-
-    function updateMotion() {
-      observer?.disconnect();
-
-      if (preference.matches) {
-        setAnimated(false);
-        return;
-      }
-      if (hasAnimated.current) return;
-
-      function startAnimation() {
-        if (preference.matches) return;
-        hasAnimated.current = true;
-        setAnimated(true);
-        observer?.disconnect();
-      }
-
-      if (!("IntersectionObserver" in window)) {
-        startAnimation();
-        return;
-      }
-
-      const visibleFraction = 0.2;
-      observer = new IntersectionObserver((entries) => {
-        if (entries.some((entry) => entry.intersectionRatio >= visibleFraction)) startAnimation();
-      }, { threshold: visibleFraction });
-
-      if (target) observer.observe(target);
+    if (!("IntersectionObserver" in window)) {
+      setHasAppeared(true);
+      return;
     }
 
-    updateMotion();
-    preference.addEventListener("change", updateMotion);
-    return () => {
-      observer?.disconnect();
-      preference.removeEventListener("change", updateMotion);
-    };
+    const visibleFraction = 0.2;
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.intersectionRatio >= visibleFraction)) return;
+      setHasAppeared(true);
+      observer.disconnect();
+    }, { threshold: visibleFraction });
+    observer.observe(target);
+    return () => observer.disconnect();
   }, []);
 
   const [width, height] = artworkSizes[asset];
+  const animated = allowsMotion && hasAppeared && !paused && !failed;
   const showMotion = animated && loaded;
 
   return (
@@ -87,14 +74,14 @@ export default function AnimatedArt({
       />
       {animated && (
         <Image
-          src={"/ongero/" + asset + ".webp"}
+          src={"/ongero/" + asset + ".webp?loop=continuous"}
           alt=""
           width={width}
           height={height}
           loading="eager"
           unoptimized
           onLoad={() => setLoaded(true)}
-          onError={() => setAnimated(false)}
+          onError={() => setFailed(true)}
           style={{ position: "absolute", inset: 0, opacity: showMotion ? 1 : 0 }}
         />
       )}

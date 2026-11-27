@@ -7,6 +7,7 @@ import "@fontsource/lora/latin-500.css";
 import "@fontsource/lora/latin-500-italic.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { MotionProvider } from "@/components/MotionControls";
 import styles from "./landing.module.css";
 import "./globals.css";
 
@@ -23,10 +24,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className={styles.landing}>
-        <a className={styles.skipLink} href="#main-content">Skip to content</a>
-        <Navbar />
-        <main id="main-content" className={styles.siteMain} tabIndex={-1}>{children}</main>
-        <Footer />
+        <MotionProvider>
+          <a className={styles.skipLink} href="#main-content">Skip to content</a>
+          <Navbar />
+          <main id="main-content" className={styles.siteMain} tabIndex={-1}>{children}</main>
+          <Footer />
+        </MotionProvider>
       </body>
     </html>
   );

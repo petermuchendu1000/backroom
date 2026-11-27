@@ -173,11 +173,12 @@
   width: 3px;
   background: currentColor;
   border-radius: 4px;
-  animation: speak 2.45s ease-in-out both;
+  animation: speak 4.8s ease-in-out infinite;
 }
 .waveform i:nth-child(2), .waveform i:nth-child(6) { height: 16px; animation-delay: .11s; }
 .waveform i:nth-child(3), .waveform i:nth-child(5) { height: 23px; animation-delay: .23s; }
 .waveform i:nth-child(4) { height: 29px; animation-delay: .3s; }
+:global(html[data-motion-paused]) .waveform i { animation-play-state: paused; }
 @keyframes speak {
   0%, 100% { transform: scaleY(1); }
   29%, 72% { transform: scaleY(.52); }
@@ -348,7 +349,10 @@
 .footerTop nav { display: flex; flex-wrap: wrap; gap: 4px 20px; }
 .footerTop nav a { display: flex; align-items: center; min-height: 44px; font-size: .9rem; }
 .footerTop nav a:hover { color: var(--purple-dark); }
-.footer p { font-size: .84rem; margin-top: 16px; }
+.footerBottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; column-gap: 16px; margin-top: 8px; }
+.footer p { font-size: .84rem; }
+.motionToggle { min-height: 44px; cursor: pointer; font-size: .84rem; color: var(--purple-dark); }
+.motionToggle:hover { text-decoration: underline; text-underline-offset: .2em; }
 
 @media (max-width: 900px) {
   .wrap { width: calc(100% - 64px); }
@@ -409,4 +413,5 @@
 
 @media (prefers-reduced-motion: reduce) {
   .landing *, .landing *::before, .landing *::after { animation: none; transition: none; }
+  .motionToggle { display: none; }
 }
