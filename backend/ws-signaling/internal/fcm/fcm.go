@@ -44,11 +44,28 @@ type AndroidConfig struct {
 	TTL      string `json:"ttl,omitempty"`      // e.g., "60s"
 }
 
-// NewFCMClient creates a new FCM client
+// NewFCMClient creates a new FCM client.
+//
+// The project id comes from FCM_PROJECT_ID, which is the name docker-compose sets for
+// this service and for the REST API. This used to read FIREBASE_PROJECT_ID — a name
+// nothing in this repository has ever set — and then fall back to a hardcoded
+// "backroom-b51b1". That fallback was not a safety net. The project id is interpolated
+// into the v1 endpoint (SendToDevice, below), so every push was addressed to a project
+// these service-account credentials have no access to and came back 403, while startup
+// logged "FCM client initialized for push notifications" and looked healthy.
+//
+// FIREBASE_PROJECT_ID is still accepted for anyone who set it by hand. With neither set
+// we return an error: main.go then logs that push notifications are disabled, and
+// matcher.go's `if m.fcm != nil` skips the push path. Loud and off beats silent and
+// misaddressed.
 func NewFCMClient() (*FCMClient, error) {
-	projectID := os.Getenv("FIREBASE_PROJECT_ID")
+	projectID := os.Getenv("FCM_PROJECT_ID")
 	if projectID == "" {
-		projectID = "backroom-b51b1" // Default from google-services.json
+		projectID = os.Getenv("FIREBASE_PROJECT_ID")
+	}
+	if projectID == "" {
+		return nil, fmt.Errorf("neither FCM_PROJECT_ID nor FIREBASE_PROJECT_ID is set; " +
+			"cannot address the FCM v1 endpoint")
 	}
 
 	client := &FCMClient{
