@@ -19,13 +19,10 @@ export default function AnimatedArt({
   asset,
   alt = "",
   className,
-  priority = false,
 }: {
   asset: MotionAsset;
   alt?: string;
   className?: string;
-  /** Set on the hero: its still is the LCP element and must not be lazy-loaded. */
-  priority?: boolean;
 }) {
   const container = useRef<HTMLSpanElement>(null);
   const { paused } = useContext(MotionContext);
@@ -73,7 +70,6 @@ export default function AnimatedArt({
         width={width}
         height={height}
         unoptimized
-        priority={priority}
         style={{ opacity: showMotion ? 0 : 1 }}
       />
       {animated && (
