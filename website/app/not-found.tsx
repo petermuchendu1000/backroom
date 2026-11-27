@@ -16,7 +16,7 @@ export default function NotFound() {
               <Link href="/crisis" className={site.textLink}>Find urgent support</Link>
             </div>
           </div>
-          <AnimatedArt asset="quiet-landing" className={styles.policyArt} />
+          <AnimatedArt asset="take-your-time" className={styles.policyArt} />
         </div>
       </div>
     </div>

@@ -3,7 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-type MotionAsset = "voice-masking" | "two-voices" | "room-to-talk" | "quiet-landing";
+const artworkSizes = {
+  "voice-masking": [504, 312],
+  "two-voices": [672, 416],
+  "room-to-talk": [504, 312],
+  "quiet-landing": [504, 312],
+  "take-your-time": [504, 312],
+  "taking-turns": [672, 416],
+} as const;
+
+type MotionAsset = keyof typeof artworkSizes;
 
 export default function AnimatedArt({
   asset,
@@ -33,15 +42,24 @@ export default function AnimatedArt({
         setAnimated(false);
         return;
       }
-      if (hasAnimated.current || !("IntersectionObserver" in window)) return;
+      if (hasAnimated.current) return;
 
-      observer = new IntersectionObserver((entries) => {
-        if (!entries.some((entry) => entry.isIntersecting) || preference.matches) return;
-
+      function startAnimation() {
+        if (preference.matches) return;
         hasAnimated.current = true;
         setAnimated(true);
         observer?.disconnect();
-      }, { threshold: 0.2 });
+      }
+
+      if (!("IntersectionObserver" in window)) {
+        startAnimation();
+        return;
+      }
+
+      const visibleFraction = 0.2;
+      observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.intersectionRatio >= visibleFraction)) startAnimation();
+      }, { threshold: visibleFraction });
 
       if (target) observer.observe(target);
     }
@@ -54,8 +72,7 @@ export default function AnimatedArt({
     };
   }, []);
 
-  const width = asset === "two-voices" ? 672 : 504;
-  const height = asset === "two-voices" ? 416 : 312;
+  const [width, height] = artworkSizes[asset];
   const showMotion = animated && loaded;
 
   return (
