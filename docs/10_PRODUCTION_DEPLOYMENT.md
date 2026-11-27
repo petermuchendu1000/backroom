@@ -63,8 +63,8 @@ Seven containers, from `docker-compose.yml` plus the `docker-compose.prod.yml` o
 | `caddy` | `caddy:2-alpine` | TLS termination, reverse proxy, automatic certificates |
 | `rest-api` | built from `backend/rest-api` | NestJS API, prefix `/api/v1` |
 | `ws-signaling` | built from `backend/ws-signaling` | Go WebSocket signalling |
-| `coturn` | `coturn/coturn:latest` | TURN/STUN relay, **host networking** |
-| `cert-sync` | `coturn/coturn:latest` | Copies Caddy's TURN certificate where coturn can read it |
+| `coturn` | `coturn/coturn@sha256:ccdbc51e…` (4.19.2) | TURN/STUN relay, **host networking** |
+| `cert-sync` | same pinned digest | Copies Caddy's TURN certificate where coturn can read it |
 | `postgres` | `postgres:15-alpine` | Database |
 | `redis` | `redis:7-alpine` | Cache, presence, pub/sub |
 
@@ -399,8 +399,11 @@ It exits non-zero and lists what failed. It checks, in order:
    TURN allocation completes over TCP+TLS.
 8. `cert-sync` has installed a certificate, and coturn's logs are **visible to
    `docker logs`** and contain no `Bad configuration format` lines.
-9. The expected tables exist (the migration trap above).
-10. `PALPLUSS_WEBHOOK_SECRET` is set.
+9. **coturn is pinned by digest, not by tag**; `coturn` and `cert-sync` resolve to
+   the same image; and the running version is the 4.19.2 this configuration was
+   verified against.
+10. The expected tables exist (the migration trap above).
+11. `PALPLUSS_WEBHOOK_SECRET` is set.
 
 Reading `turnutils_uclient` correctly is most of the difficulty, and four separate
 traps are each measured against **coturn 4.19.2** with this exact config:
@@ -549,19 +552,33 @@ Things this deployment does **not** give you. None is a blocker; all are real.
    restarts turnserver when the pair changes. Verified: turnserver restarts and
    serves the new certificate. Anyone mid-call at that moment is disconnected.
    Roughly once every 60 days, unavoidable without patching coturn.
-3. **`coturn/coturn:latest` is unpinned, and it has already drifted.** The tag currently
-   resolves to **4.19.2**, while the comment in `backend/coturn/turnserver.conf` records a
-   behaviour check made against **4.6.1** — so that note is about a different TURN server
-   than the one that will run. A rebuild can change the version again with no signal. Pin
-   it:
+3. **The pinned coturn receives no security updates.** `coturn/coturn` is now
+   pinned by digest to `sha256:ccdbc51e…` (coturn **4.19.2**) in *both* places it
+   appears — the `coturn` service in `docker-compose.yml` and `cert-sync` in
+   `docker-compose.prod.yml`. That buys reproducibility and costs updates: nothing
+   will bring in a coturn security fix until somebody changes the digest. Check
+   periodically.
 
-   ```yaml
-   coturn:
-     image: coturn/coturn@sha256:ccdbc51e6f072130b0fc9eebda21f8d026d0a25581746c52557e887818011a3f
+   It is pinned in the development file too, on purpose. `turnserver.conf` is
+   shared between dev and prod, and it is version-sensitive in ways that fail
+   silently — 4.19.2 rejects `no-sslv3`, `no-tlsv1` and `no-tlsv1_1`, which it
+   carried for a long time while appearing to harden TLS. Debugging a relay
+   problem against a different coturn than production runs is how you reach a
+   confident wrong answer.
+
+   To update:
+
+   ```bash
+   docker pull coturn/coturn:latest
+   docker image inspect coturn/coturn:latest --format '{{index .RepoDigests 0}}'
    ```
 
-   (That digest is 4.19.2 as of this writing — re-resolve it rather than trusting this
-   line if time has passed.)
+   Put that digest in **both** files, then run `./deploy/verify.sh`. It asserts
+   the image is pinned rather than tagged, that both services resolve to the same
+   image, and that the version is the 4.19.2 this configuration was verified
+   against — so a bump that changes behaviour shows up as a failed check instead
+   of a silent change. After bumping, re-read `turnserver -h` for the cert and log
+   options and check `docker compose logs coturn` for `Bad configuration format`.
 4. **London, not East Africa.** See the top of this document.
 5. **No monitoring or alerting.** Nothing tells you the API is down except a user.
    `deploy/verify.sh` is a manual check, not a monitor.

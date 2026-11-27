@@ -335,6 +335,46 @@ else
 fi
 
 # -------------------------------------------------------------------------
+head_ "6c. coturn image is pinned, and pinned consistently"
+# -------------------------------------------------------------------------
+# The coturn image is referenced in two files — the coturn service in
+# docker-compose.yml and cert-sync in docker-compose.prod.yml. Two literals can
+# drift, so this asserts they have not, rather than trusting the comment that
+# says they must not.
+#
+# Pinning matters here because the configuration is version-sensitive in ways
+# that fail quietly: coturn 4.19.2 rejects directives older versions accepted,
+# and an unpinned tag changes TURN behaviour with no diff.
+C="-f docker-compose.yml -f docker-compose.prod.yml"
+
+# .Config.Image is the reference as written; .Image is the resolved content id.
+co_ref=$(docker inspect --format '{{.Config.Image}}' "$(docker compose $C ps -q coturn)")
+cs_ref=$(docker inspect --format '{{.Config.Image}}' "$(docker compose $C ps -q cert-sync)")
+co_id=$(docker inspect --format '{{.Image}}' "$(docker compose $C ps -q coturn)")
+cs_id=$(docker inspect --format '{{.Image}}' "$(docker compose $C ps -q cert-sync)")
+
+case "$co_ref" in
+  *@sha256:*) ok "coturn is pinned by digest (${co_ref##*@})" ;;
+  *)          bad "coturn is NOT pinned — it references the mutable tag '$co_ref', so a rebuild can change the TURN server with no diff" ;;
+esac
+
+if [ "$co_id" = "$cs_id" ]; then
+  ok "coturn and cert-sync run the same image"
+else
+  bad "coturn and cert-sync run DIFFERENT images ($co_ref vs $cs_ref) — the two pins have drifted apart"
+fi
+
+# The pinned image must be the version this configuration was written against.
+# turnserver.conf's comments and deploy/coturn-entrypoint.sh both record
+# behaviour measured on 4.19.2.
+co_ver=$(docker compose $C exec -T coturn turnserver --version 2>&1 | tr -d '[:space:]')
+if [ "$co_ver" = "4.19.2" ]; then
+  ok "coturn is 4.19.2, the version this configuration was verified against"
+else
+  bad "coturn reports version '$co_ver', not the 4.19.2 this configuration was verified against — re-check turnserver.conf for rejected directives and re-read 'turnserver -h' for the cert and log options"
+fi
+
+# -------------------------------------------------------------------------
 head_ "7. Database schema is present"
 # -------------------------------------------------------------------------
 # The migrations are mounted into docker-entrypoint-initdb.d, which Postgres runs

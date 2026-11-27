@@ -142,7 +142,12 @@ services:
   # user "0:0" because re-owning a file requires root; the script does nothing
   # else, and caddy_data is mounted read-only.
   cert-sync:
-    image: coturn/coturn:latest
+    # MUST be the same digest as the coturn service in docker-compose.yml. Not
+    # for correctness of this service — it only needs sh, find, sha256sum and
+    # openssl — but so that one image is pulled instead of two, and so there is
+    # one thing to update rather than two that can silently diverge.
+    # deploy/verify.sh asserts the two services run the same image.
+    image: coturn/coturn@sha256:ccdbc51e6f072130b0fc9eebda21f8d026d0a25581746c52557e887818011a3f
     container_name: ongero-cert-sync
     restart: unless-stopped
     user: "0:0"

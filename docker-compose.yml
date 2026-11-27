@@ -53,7 +53,32 @@ services:
   # COTURN — TURN/STUN server for WebRTC
   # ============================================
   coturn:
-    image: coturn/coturn:latest
+    # Pinned by digest, not :latest.
+    #
+    # This is an OCI image index (multi-arch), so it resolves on any
+    # architecture — verified: mediaType application/vnd.oci.image.index.v1+json.
+    # It is coturn 4.19.2.
+    #
+    # Pinned because this stack's configuration is version-sensitive in ways that
+    # fail quietly. coturn 4.19.2 REJECTS directives that older versions accepted
+    # (no-sslv3, no-tlsv1, no-tlsv1_1 were silently discarded here for a long
+    # time), and deploy/coturn-entrypoint.sh depends on there being no
+    # certificate reload. An unpinned tag means a rebuild can change TURN
+    # behaviour with no diff and no signal.
+    #
+    # It is pinned in the DEV file on purpose, so development and production run
+    # the same TURN server. turnserver.conf is shared between them, and debugging
+    # a relay problem against a different coturn than production runs is how you
+    # reach a confident wrong answer.
+    #
+    # To update: pull the new tag, read the digest, change it in BOTH places
+    # (here and the cert-sync service in docker-compose.prod.yml), then re-run
+    # ./deploy/verify.sh — it asserts the two match.
+    #
+    #   docker pull coturn/coturn:latest
+    #   docker image inspect coturn/coturn:latest --format '{{index .RepoDigests 0}}'
+    #
+    image: coturn/coturn@sha256:ccdbc51e6f072130b0fc9eebda21f8d026d0a25581746c52557e887818011a3f
     container_name: ongero-coturn
     restart: unless-stopped
     ports:
