@@ -82,13 +82,15 @@ export default function Home() {
             </div>
 
             <figure className={styles.heroVisual}>
-              <Image
-                src="/ongero/someone-to-talk-to.webp"
-                alt="A woman taking a quiet moment to talk on her phone by a window."
-                fill
-                loading="eager"
-                fetchPriority="high"
-                sizes="(max-width: 780px) 94vw, (max-width: 1230px) 49vw, 620px"
+              {/* The hero was a photograph, which could never move however the
+                  artwork was encoded. two-voices is the motif the brand mark already
+                  uses — two faces turned toward each other — so the thing that moves
+                  is also the thing the product is about. */}
+              <AnimatedArt
+                asset="two-voices"
+                alt="Two faces in profile, turned toward each other."
+                className={styles.heroMotion}
+                priority
               />
               <figcaption className={styles.callCaption}>
                 <span className={styles.callCaptionIcon}>

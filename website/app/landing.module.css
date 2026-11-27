@@ -137,6 +137,20 @@
 .heroVisual { aspect-ratio: 1.12; }
 .heroVisual img, .listenPhoto img { object-fit: cover; }
 .heroVisual img { object-position: 62% 44%; }
+/* The hero artwork, not a photograph.
+   `contain`, not `cover`: the asset is 1.6:1 and the slot is 1.12, so covering would
+   crop a third off the sides and clip the ellipse the faces sit in. The art has a
+   transparent background, so what shows around it is the figure's own purple.
+   Bottom padding keeps it clear of the caption pinned to the lower-left. */
+.heroMotion { position: absolute; inset: 0; display: block; }
+.heroMotion img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center 42%;
+  padding: clamp(14px, 3vw, 34px);
+  padding-bottom: clamp(74px, 12vw, 104px);
+}
 .callCaption {
   position: absolute;
   left: clamp(13px, 2.2vw, 31px);
