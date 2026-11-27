@@ -36,7 +36,7 @@ export default function Navbar() {
       <div className={styles.wrap}>
         <nav aria-label="Main navigation" className={styles.nav}>
           <Link href="/" className={styles.brand} aria-label="Ongero home" onClick={() => setOpen(false)}>
-            <span className={styles.brandMark} aria-hidden="true"><i /><i /><i /><i /><i /></span>
+            <img src="/ongero-mark.png" alt="" width={34} height={34} className={styles.brandMark} aria-hidden="true" />
             Ongero
           </Link>
           <div className={styles.desktopNav}>

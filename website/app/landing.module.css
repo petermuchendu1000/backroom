@@ -45,20 +45,16 @@
 
 .nav { display: flex; justify-content: space-between; align-items: center; gap: 22px; min-height: 74px; position: relative; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-size: 1.52rem; letter-spacing: -.07em; font-weight: 750; white-space: nowrap; }
+/* The Ongero mark: the same two-faces heart as the Android launcher icon, so the
+   site and the app read as one product. Transparent, so it sits on both the light
+   sections and the dark privacy band. */
 .brandMark {
   width: 34px;
   height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2.1px;
-  border-radius: 50%;
-  color: #fffaff;
-  background: var(--purple);
+  display: block;
+  object-fit: contain;
+  flex: none;
 }
-.brandMark i { width: 2px; height: 7px; border-radius: 2px; background: currentColor; }
-.brandMark i:nth-child(even) { height: 11px; }
-.brandMark i:nth-child(3) { height: 16px; }
 .desktopNav, .navActions { display: flex; align-items: center; }
 .desktopNav { gap: clamp(18px, 3vw, 43px); }
 .desktopNav a, .mobileNav a { color: var(--muted); font-size: .91rem; font-weight: 550; }

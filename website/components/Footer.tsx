@@ -7,7 +7,7 @@ export default function Footer() {
       <div className={styles.wrap}>
         <div className={styles.footerTop}>
           <Link href="/" className={styles.brand} aria-label="Ongero home">
-            <span className={styles.brandMark} aria-hidden="true"><i /><i /><i /><i /><i /></span>
+            <img src="/ongero-mark.png" alt="" width={34} height={34} className={styles.brandMark} aria-hidden="true" />
             Ongero
           </Link>
           <nav aria-label="Footer navigation">
