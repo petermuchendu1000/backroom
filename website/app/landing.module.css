@@ -154,14 +154,16 @@
 }
 .callCaptionIcon {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 85px;
+  height: 52px;
   flex-shrink: 0;
   place-items: center;
+  overflow: hidden;
   border-radius: 11px;
-  background: #8359ac55;
-  color: #e2c7ff;
+  background: #412657;
 }
+.captionMotion { width: 100%; }
+.captionMotion img { display: block; width: 100%; height: auto; }
 .captionText { display: grid; gap: 4px; }
 .captionText small { color: #e1caef; font-size: .79rem; line-height: 1.3; }
 .captionText strong { font-size: 1rem; font-weight: 620; line-height: 1.4; }

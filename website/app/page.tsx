@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Check, Headphones, Heart, Lock, Shield, Smartphone } from "lucide-react";
 import { CallWalkthrough, VoiceMaskingDemo } from "@/components/LandingDemos";
+import AnimatedArt from "@/components/AnimatedArt";
 import FAQList from "@/components/FAQList";
 import { questions } from "./faq-content";
 import styles from "./landing.module.css";
@@ -55,14 +56,6 @@ const privacyDetails = [
   },
 ];
 
-function Waveform() {
-  return (
-    <span className={styles.waveform} aria-hidden="true">
-      <i /><i /><i /><i /><i /><i /><i />
-    </span>
-  );
-}
-
 export default function Home() {
   return (
     <>
@@ -98,7 +91,9 @@ export default function Home() {
                 sizes="(max-width: 780px) 94vw, (max-width: 1230px) 49vw, 620px"
               />
               <figcaption className={styles.callCaption}>
-                <span className={styles.callCaptionIcon}><Waveform /></span>
+                <span className={styles.callCaptionIcon}>
+                  <AnimatedArt asset="taking-turns" className={styles.captionMotion} />
+                </span>
                 <span className={styles.captionText}><small>Example Ongero call</small><strong>Take your time.</strong></span>
               </figcaption>
             </figure>
