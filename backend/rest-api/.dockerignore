@@ -1,0 +1,19 @@
+# Keep the build context small and the image reproducible.
+#
+# node_modules matters most. The Dockerfile runs `npm ci` and THEN `COPY . .`;
+# without this line, a developer machine with node_modules present would copy its
+# own — built for that machine's platform — straight over the ones npm ci just
+# installed for the image. The result builds on a laptop and fails in the image,
+# or worse, works until a native module disagrees.
+node_modules
+dist
+
+# Never let a local .env reach an image layer. Configuration is injected at run
+# time by docker-compose; a copy baked into the image would be both stale and a
+# secret sitting in a layer anyone who pulls the image can read.
+.env
+.env.*
+
+coverage
+*.log
+.git
