@@ -1018,8 +1018,37 @@ class WebRTCManager(
 
     fun setMuted(muted: Boolean) {
         isMuted = muted
+
+        // Two independent mechanisms, deliberately.
+        //
+        // 1. The track. The conventional WebRTC mute — a disabled local audio track makes
+        //    the sender transmit silence. It depends on the track existing and on the
+        //    sender observing its enabled state.
+        //
+        // 2. The audio device module. WebRtcAudioRecord reads `microphoneMute` in its
+        //    record loop and overwrites the buffer with zeros before handing it to
+        //    native (verified in the shipped bytecode of stream-webrtc-android 1.3.10:
+        //    microphoneMute at offset 138, emptyBytes at 166, nativeDataIsRecorded at
+        //    227). That is a mute at the source, independent of track and sender
+        //    semantics, and it is what guarantees nothing leaves the microphone.
+        //
+        // Only (1) was here. Nothing in the app has ever called (2).
         localAudioTrack?.setEnabled(!muted)
-        Log.d(TAG, "Mute: $muted")
+        audioDeviceModule?.setMicrophoneMute(muted)
+
+        // Read the state back instead of echoing the request. "Mute: true" printed from
+        // the argument is printed just as happily when localAudioTrack is null and
+        // nothing happened at all.
+        Log.d(
+            TAG,
+            "Mute requested=$muted → track.enabled=${localAudioTrack?.enabled()}" +
+                " (track ${if (localAudioTrack == null) "MISSING" else "present"})," +
+                " adm ${if (audioDeviceModule == null) "MISSING" else "told to mute=$muted"}",
+        )
+
+        if (localAudioTrack == null && audioDeviceModule == null) {
+            Log.e(TAG, "❌ setMuted($muted) did NOTHING — no audio track and no audio device module")
+        }
     }
 
     fun isMuted(): Boolean = isMuted

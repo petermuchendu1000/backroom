@@ -835,10 +835,23 @@ object CallManager {
      * Set mute state and notify remote party
      */
     fun setMuted(muted: Boolean) {
-        _isMuted.value = muted
-        _webRTCManager?.setMuted(muted)
+        val webrtc = _webRTCManager
+        if (webrtc == null) {
+            // Deliberately NOT setting _isMuted. The in-call screen binds its microphone
+            // button to that flow, so flipping it here would show the user a muted
+            // microphone while their audio kept going out — the worst available outcome
+            // for a control whose whole job is to stop transmitting. This used to be
+            // `_webRTCManager?.setMuted(muted)`: a null receiver, no call, no complaint,
+            // and a UI that said "muted".
+            Log.e(TAG, "❌ setMuted($muted) IGNORED — no WebRTCManager. The microphone is NOT muted.")
+            return
+        }
 
-        // Send mute state to remote party via signaling
+        _isMuted.value = muted
+        webrtc.setMuted(muted)
+
+        // Only tell the other side once the local mute has actually been applied.
+        // Announcing a mute we failed to perform is a lie with consequences.
         val callId = _currentCallId.value ?: return
         scope.launch {
             signalingClient.sendMuteState(callId, muted)
