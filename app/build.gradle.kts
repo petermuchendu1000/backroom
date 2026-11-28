@@ -192,8 +192,25 @@ dependencies {
     // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
 
-    // WebRTC - using latest version with AudioRecordDataCallback support
-    implementation("io.getstream:stream-webrtc-android:1.3.10")
+    // WebRTC.
+    //
+    // This was io.getstream:stream-webrtc-android:1.3.10, chosen — per the comment that
+    // used to be here — for "AudioRecordDataCallback support". That support does not
+    // exist in it. JavaAudioDeviceModule.Builder declares the field and the setter, so
+    // the app compiles, but build() constructs WebRtcAudioRecord without passing it and
+    // WebRtcAudioRecord contains no reference to the type at all. Verified three ways:
+    // the source at tag 1.3.10, the source at main, and `javap` over the shipped AAR,
+    // whose constructor signature ends (..., SamplesReadyCallback, boolean, boolean).
+    //
+    // The consequence was not a missing feature. ProductionVoiceAnonymizer never ran on
+    // live audio, so every call transmitted the speaker's real, unmodified voice — in an
+    // app whose central promise is that it does not.
+    //
+    // This build invokes JavaAudioDeviceModule.AudioBufferCallback.onBuffer() on the real
+    // capture buffer, before the data reaches native: in WebRtcAudioRecord$AudioRecordThread
+    // the mute check sits at bytecode offset 537, onBuffer at 741 and nativeDataIsRecorded
+    // at 787. In-place modification there is what actually reaches the far end.
+    implementation("io.github.webrtc-sdk:android:150.7871.09")
 
     // WebSocket & Networking
     implementation("com.squareup.okhttp3:okhttp:4.12.0")

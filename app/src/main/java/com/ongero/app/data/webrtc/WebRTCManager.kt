@@ -144,14 +144,15 @@ class WebRTCManager(
         try {
             Log.d(TAG, "🏭 initializePeerConnectionFactory starting...")
             Log.d(TAG, "═══════════════════════════════════════════════════")
-            Log.d(TAG, "🎭 INITIALIZING VOICE ANONYMIZER (AudioRecordDataCallback)")
+            Log.d(TAG, "🎭 INITIALIZING VOICE ANONYMIZER (AudioBufferCallback)")
             Log.d(TAG, "   Algorithm: PSOLA + Formant + Spectral + Ring Mod + Noise")
             Log.d(TAG, "   🎭 Voice anonymization: ${if (voiceAnonymizationEnabled) "ENABLED" else "DISABLED"}")
             Log.d(TAG, "   🎭 Anonymization level: ${currentAnonymizationLevel.name}")
             Log.d(TAG, "═══════════════════════════════════════════════════")
 
             // Build audio device module using ProductionAudioDeviceModule
-            // which uses AudioRecordDataCallback for GUARANTEED in-place audio interception
+            // which uses AudioBufferCallback, verified in the shipped bytecode to run
+            // on the capture buffer before nativeDataIsRecorded
             val adm = AudioDeviceModuleFactory.create(
                 context = context,
                 enableAnonymization = voiceAnonymizationEnabled,
@@ -159,7 +160,7 @@ class WebRTCManager(
             )
             audioDeviceModule = adm
 
-            Log.d(TAG, "   ✅ AudioDeviceModule created (AudioRecordDataCallback)")
+            Log.d(TAG, "   ✅ AudioDeviceModule created (AudioBufferCallback)")
 
             peerConnectionFactory = PeerConnectionFactory.builder()
                 .setOptions(PeerConnectionFactory.Options().apply {

@@ -3,27 +3,34 @@ package com.ongero.app.data.audio
 import android.content.Context
 import android.util.Log
 import org.webrtc.audio.AudioDeviceModule
-import org.webrtc.audio.AudioRecordDataCallback
 import org.webrtc.audio.JavaAudioDeviceModule
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════════════════
- * PRODUCTION AUDIO DEVICE MODULE  (v3 — AudioRecordDataCallback approach)
+ * PRODUCTION AUDIO DEVICE MODULE  (v4 — AudioBufferCallback)
  * ═══════════════════════════════════════════════════════════════════════════════════════
  *
  * Instead of creating a second AudioRecord (which conflicts with the one inside
  * JavaAudioDeviceModule), we build a standard JavaAudioDeviceModule and register an
- * [AudioRecordDataCallback].  That callback fires **before** the recorded PCM is
- * handed to native via nativeDataIsRecorded, so modifying the ByteBuffer in-place
- * is the most reliable Android WebRTC audio-interception pattern.
+ * [JavaAudioDeviceModule.AudioBufferCallback]. It fires **before** the recorded PCM is
+ * handed to native via nativeDataIsRecorded, so modifying the ByteBuffer in place is
+ * what the far end actually hears.
+ *
+ * v3 did the same thing with AudioRecordDataCallback on stream-webrtc-android, where
+ * that callback is never invoked — the Builder stores it and build() drops it. The
+ * anonymiser therefore never ran and real voices were transmitted. Nothing in the code
+ * said so, because the callback simply was not called. If this file is ever ported to
+ * another WebRTC build, verify in that build's bytecode that the hook is reached before
+ * nativeDataIsRecorded, and do not trust the method merely existing.
  *
  * ARCHITECTURE:
  * ┌──────────┐   ┌─────────────────────────────────┐   ┌──────────┐
  * │ Hardware │──▶│ JavaAudioDeviceModule            │──▶│ WebRTC   │
- * │   Mic    │   │  └─ AudioRecordDataCallback ───▶ │   │  Native  │
+ * │   Mic    │   │  └─ AudioBufferCallback ──────▶  │   │  Native  │
  * │          │   │      (in-place anonymisation)     │   │  Encoder │
  * └──────────┘   └─────────────────────────────────┘   └──────────┘
  *
@@ -54,20 +61,30 @@ class ProductionAudioDeviceModule private constructor(
             // Always (re-)initialise the voice anonymizer
             ProductionVoiceAnonymizer.initialize(SAMPLE_RATE)
 
+            // micMuted lives on the companion, so it outlives any one module. Clear it
+            // here or a call that ended while muted would start the next one silent.
+            micMuted.set(false)
+
             val statsTracker = StatsTracker()
 
             val javaModule = JavaAudioDeviceModule.builder(context.applicationContext)
                 .setUseHardwareAcousticEchoCanceler(true)
                 .setUseHardwareNoiseSuppressor(true)
                 // ── THE CRITICAL CALLBACK ──
-                .setAudioRecordDataCallback(object : AudioRecordDataCallback {
-                    override fun onAudioDataRecorded(
+                // The return value becomes the capture timestamp passed to
+                // nativeDataIsRecorded, so hand back the one we were given. The library
+                // recomputes bytesRead from the buffer's capacity after this returns.
+                .setAudioBufferCallback(object : JavaAudioDeviceModule.AudioBufferCallback {
+                    override fun onBuffer(
+                        buffer: ByteBuffer,
                         audioFormat: Int,
                         channelCount: Int,
                         sampleRate: Int,
-                        audioBuffer: ByteBuffer
-                    ) {
-                        processBufferInPlace(audioBuffer, statsTracker)
+                        bytesRead: Int,
+                        captureTimeNs: Long,
+                    ): Long {
+                        processBufferInPlace(buffer, statsTracker)
+                        return captureTimeNs
                     }
                 })
                 .setAudioRecordStateCallback(object : JavaAudioDeviceModule.AudioRecordStateCallback {
@@ -126,9 +143,24 @@ class ProductionAudioDeviceModule private constructor(
         // In-place audio processing (called on WebRTC's audio thread)
         // ─────────────────────────────────────────────────────────────────────
 
+        /** Set by [setMicrophoneMute] so muted frames skip the anonymiser entirely. */
+        private val micMuted = AtomicBoolean(false)
+
         private fun processBufferInPlace(buffer: ByteBuffer, stats: StatsTracker) {
             try {
                 val frameNum = stats.framesProcessed.incrementAndGet()
+
+                // WebRtcAudioRecord zeroes the buffer when muted, and it does so BEFORE
+                // this callback (bytecode offsets 537 and 741). Running the anonymiser
+                // over that silence would be worse than pointless: the pipeline adds ring
+                // modulation and a noise component, so a muted microphone would transmit
+                // noise instead of nothing. Leave the zeros alone.
+                if (micMuted.get()) {
+                    if (frameNum <= 5) {
+                        Log.d(TAG, "🔇 Frame #$frameNum | muted — passing silence through untouched")
+                    }
+                    return
+                }
 
                 // Ensure little-endian (PCM 16-bit LE is the WebRTC standard)
                 buffer.order(ByteOrder.LITTLE_ENDIAN)
@@ -180,8 +212,9 @@ class ProductionAudioDeviceModule private constructor(
     // AudioDeviceModule delegation — everything goes straight to JavaAudioDeviceModule
     // ═══════════════════════════════════════════════════════════════════════════
 
-    override fun getNativeAudioDeviceModulePointer(): Long =
-        inner.nativeAudioDeviceModulePointer
+    // Renamed in webrtc-sdk: getNativeAudioDeviceModulePointer() -> getNative(long).
+    // The argument is the WebRTC environment reference the factory passes down.
+    override fun getNative(webrtcEnvRef: Long): Long = inner.getNative(webrtcEnvRef)
 
     override fun release() {
         Log.d(TAG, "🛑 Releasing ProductionAudioDeviceModule")
@@ -190,7 +223,15 @@ class ProductionAudioDeviceModule private constructor(
     }
 
     override fun setSpeakerMute(mute: Boolean) = inner.setSpeakerMute(mute)
-    override fun setMicrophoneMute(mute: Boolean) = inner.setMicrophoneMute(mute)
+
+    // Delegates so WebRtcAudioRecord zeroes the capture buffer, and records the state so
+    // processBufferInPlace leaves those zeros alone instead of anonymising silence into
+    // noise. WebRTCManager.setMuted is what calls this.
+    override fun setMicrophoneMute(mute: Boolean) {
+        micMuted.set(mute)
+        inner.setMicrophoneMute(mute)
+        Log.d(TAG, "🔇 Microphone mute set to $mute (anonymiser will ${if (mute) "skip" else "process"} frames)")
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // Public API
@@ -205,7 +246,7 @@ class ProductionAudioDeviceModule private constructor(
     }
 
     fun getDebugInfo(): String = """
-        ProductionAudioDeviceModule (v3 — AudioRecordDataCallback)
+        ProductionAudioDeviceModule (v4 — AudioBufferCallback)
         ${ProductionVoiceAnonymizer.getDebugInfo()}
     """.trimIndent()
 }
@@ -230,7 +271,7 @@ object AudioDeviceModuleFactory {
             val module = ProductionAudioDeviceModule.create(context)
             module.setAnonymizationLevel(anonymizationLevel)
             module.setAnonymizationEnabled(true)
-            Log.d(TAG, "   ✅ ProductionAudioDeviceModule (AudioRecordDataCallback) created")
+            Log.d(TAG, "   ✅ ProductionAudioDeviceModule (AudioBufferCallback) created")
             module
         } else {
             val module = JavaAudioDeviceModule.builder(context)
