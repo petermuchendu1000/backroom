@@ -1,8 +1,54 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Release signing
+// ─────────────────────────────────────────────────────────────────────────────
+// Values come from keystore.properties at the repository root, or from the matching
+// environment variables so CI can sign without a file on disk. Both are gitignored /
+// absent from the repo: a keystore password in version control is the key itself.
+//
+// Losing the keystore is unrecoverable. Android identifies an app by its signature, so
+// a replacement key cannot update an existing install — users would have to uninstall,
+// losing their data, and the Play Store would refuse the upload outright. Back it up
+// somewhere that is not this laptop.
+//
+//     keystore.properties
+//     ───────────────────
+//     storeFile=/absolute/path/to/ongero-release.jks
+//     storePassword=...
+//     keyAlias=ongero
+//     keyPassword=...
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+fun signingValue(key: String, env: String): String? =
+    (keystoreProperties.getProperty(key) ?: System.getenv(env))?.takeIf { it.isNotBlank() }
+
+val releaseKeystore = signingValue("storeFile", "ONGERO_KEYSTORE")
+    ?.let { rootProject.file(it) }
+    ?.takeIf { it.exists() }
+
+// Without a keystore, `assembleRelease` still succeeds and emits an APK no device will
+// install — a green build with a useless artifact. Say so, but only when a release task
+// was actually asked for, so debug builds stay quiet.
+if (releaseKeystore == null &&
+    gradle.startParameter.taskNames.any { it.contains("elease") }
+) {
+    logger.warn(
+        "WARNING: no release keystore configured — this build will be UNSIGNED and " +
+            "cannot be installed. See docs/11_RELEASE_AND_DISTRIBUTION.md.",
+    )
 }
 
 android {
@@ -46,8 +92,25 @@ android {
         )
     }
 
+    signingConfigs {
+        // Created only when a keystore is actually present. Declaring it unconditionally
+        // with a null storeFile fails the build for everyone who just wants installDebug.
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = signingValue("storePassword", "ONGERO_KEYSTORE_PASSWORD")
+                keyAlias = signingValue("keyAlias", "ONGERO_KEY_ALIAS")
+                keyPassword = signingValue("keyPassword", "ONGERO_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            // null when no keystore is configured, which leaves the previous behaviour
+            // (an unsigned APK) rather than breaking the build. The warning above is
+            // what tells you about it.
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

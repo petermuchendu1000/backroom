@@ -122,3 +122,47 @@
 		}
 	}
 }
+
+# =====================================================================
+# dl.ongero.com — the APK download
+# =====================================================================
+# The website is a static export on Cloudflare Pages, which caps a single file at
+# 25 MiB. A release APK is larger than that, so the download is served from here
+# instead, where there is no such limit and Caddy already terminates TLS.
+#
+# BEFORE DEPLOYING THIS: the A record for {$DOWNLOAD_HOST} must already point at this
+# host, grey-clouded like the others. Caddy obtains certificates per hostname, so a
+# missing record does not affect api/ws/turn — but it will retry ACME for this name
+# and Let's Encrypt rate-limits repeated failures per domain.
+{$DOWNLOAD_HOST} {
+	root * /srv/downloads
+
+	# No `browse`: file_server answers 404 for a directory rather than listing it,
+	# so the contents of /srv/downloads are not enumerable.
+	#
+	# No explicit Content-Type for .apk either. That was here, on the assumption that
+	# Caddy would otherwise serve octet-stream — which some Android browsers refuse to
+	# hand to the package installer. Removing it changed nothing: the official image
+	# installs the `mailcap` package, whose /etc/mime.types maps apk to
+	# application/vnd.android.package-archive, and Go's mime package reads it. The
+	# directive was doing no work, so it is gone. deploy/verify.sh section 10 asserts
+	# the served Content-Type, which is what would catch this if the image ever stopped
+	# shipping mailcap.
+	file_server
+
+	# Deliberately no `encode`: an APK is a ZIP, so compressing it again spends CPU
+	# on every download to save nothing.
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		-Server
+	}
+
+	log {
+		output file /data/access-dl.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+	}
+}

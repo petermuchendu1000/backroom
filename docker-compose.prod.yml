@@ -184,9 +184,15 @@ services:
       # Caddy obtains the TURN hostname's certificate too; coturn reads it via
       # the cert-sync service. See the turn block in deploy/Caddyfile.
       - TURN_HOST=${TURN_HOST:-turn.ongero.com}
+      # Serves the APK. Its DNS record must exist before this is deployed, or Caddy
+      # repeatedly fails ACME for this one hostname — see the dl block in the Caddyfile.
+      - DOWNLOAD_HOST=${DOWNLOAD_HOST:-dl.ongero.com}
       - ACME_EMAIL=${ACME_EMAIL:?set ACME_EMAIL in .env — where Let's Encrypt sends expiry warnings}
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Read-only: Caddy serves what is put here, and a compromise of the web tier
+      # must not be able to replace the APK people are installing.
+      - ./downloads:/srv/downloads:ro
       - caddy_data:/data
       - caddy_config:/config
 

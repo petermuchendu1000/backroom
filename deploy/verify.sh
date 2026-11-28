@@ -19,6 +19,7 @@ set -o pipefail
 API_HOST="${API_HOST:-api.ongero.com}"
 WS_HOST="${WS_HOST:-ws.ongero.com}"
 TURN_HOST="${TURN_HOST:-turn.ongero.com}"
+DOWNLOAD_HOST="${DOWNLOAD_HOST:-dl.ongero.com}"
 
 pass=0
 fail=0
@@ -476,6 +477,43 @@ case "$cred" in
   *)
     bad "FCM credential probe failed to authenticate: $cred" ;;
 esac
+
+# -------------------------------------------------------------------------
+head_ "10. APK download"
+# -------------------------------------------------------------------------
+# Skipped until an APK has actually been published — the download host is optional
+# until you ship a build, and failing for an absent file nobody asked for would train
+# you to ignore a red suite.
+apk_count=$(find downloads -maxdepth 1 -type f -name '*.apk' | wc -l)
+if [ "$apk_count" -eq 0 ]; then
+  printf '  \033[33mSKIP\033[0m  no .apk in downloads/ — nothing published yet\n'
+else
+  dl_url="https://${DOWNLOAD_HOST}/ongero.apk"
+
+  dl_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$dl_url")
+  if [ "$dl_code" = "200" ]; then
+    ok "$dl_url -> 200"
+  else
+    bad "$dl_url -> $dl_code (DNS record missing, certificate not issued, or file not named ongero.apk)"
+  fi
+
+  dl_type=$(curl -s -o /dev/null -w '%{content_type}' --max-time 20 "$dl_url")
+  case "$dl_type" in
+    application/vnd.android.package-archive*)
+      ok "served as application/vnd.android.package-archive" ;;
+    *)
+      bad "served as '$dl_type' — some Android browsers will not pass that to the package installer" ;;
+  esac
+
+  # The bytes, not the headers. Every APK is a ZIP, so the first two bytes are "PK".
+  # A 200 with an HTML error page, or a truncated upload, fails here and nowhere else.
+  dl_magic=$(curl -s --max-time 20 --range 0-1 "$dl_url")
+  if [ "$dl_magic" = "PK" ]; then
+    ok "the served file begins with the ZIP magic every APK starts with"
+  else
+    bad "the served file does not begin with 'PK' — it is not an APK"
+  fi
+fi
 
 # -------------------------------------------------------------------------
 printf '\n\033[1m================ %d passed, %d failed ================\033[0m\n' "$pass" "$fail"

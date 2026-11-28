@@ -1,0 +1,7 @@
+# This directory is bind-mounted read-only into the caddy container at /srv/downloads
+# and served at https://{$DOWNLOAD_HOST}/. Put the signed release APK here as
+# ongero.apk; see docs/11_RELEASE_AND_DISTRIBUTION.md.
+#
+# The directory is tracked, its contents are not (.gitignore excludes downloads/*.apk).
+# It has to exist in the repository because a bind mount whose host path is missing is
+# created by Docker as an empty DIRECTORY — which would silently serve nothing.
