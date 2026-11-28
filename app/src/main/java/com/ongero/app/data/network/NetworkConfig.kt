@@ -17,7 +17,10 @@ object NetworkConfig {
      * Set to true when deploying to production.
      * This can also be tied to BuildConfig.DEBUG
      */
-    private val IS_PRODUCTION = !BuildConfig.DEBUG
+    // A release build is always production. A debug build can be sent there too, with
+    // -PprodBackend=true, which is how you test against api.ongero.com from a device
+    // while keeping an installable, debuggable APK. See app/build.gradle.kts.
+    private val IS_PRODUCTION = !BuildConfig.DEBUG || BuildConfig.USE_PROD_BACKEND
 
     // ============================================
     // DEVELOPMENT SETTINGS (Local WiFi)

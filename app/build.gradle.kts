@@ -28,6 +28,22 @@ android {
             "REDESIGN_UI",
             (project.findProperty("redesignUi")?.toString()?.toBoolean() ?: false).toString(),
         )
+
+        // Point a DEBUG build at the production backend:
+        //     ./gradlew installDebug -PprodBackend=true
+        //
+        // NetworkConfig picks its URLs from BuildConfig.DEBUG, so a debug build otherwise
+        // talks to DEV_SERVER_IP — a LAN address that is right for a laptop on the same
+        // WiFi and useless for testing against api.ongero.com. A release build is always
+        // production, but `release` here has no signingConfig, so assembleRelease yields
+        // an unsigned APK that cannot be installed. This flag is the only way to get a
+        // installable build that reaches production, and it keeps logcat, which is what a
+        // push-notification test is read through.
+        buildConfigField(
+            "boolean",
+            "USE_PROD_BACKEND",
+            (project.findProperty("prodBackend")?.toString()?.toBoolean() ?: false).toString(),
+        )
     }
 
     buildTypes {
